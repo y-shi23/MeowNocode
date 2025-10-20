@@ -52,6 +52,12 @@
 }
 
 @layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
   * {
     @apply border-border;
   }
@@ -59,6 +65,14 @@
     @apply bg-background text-foreground;
     font-family: 'Roboto', 'Noto Sans SC', sans-serif;
     transition: background-color 0.3s ease, color 0.3s ease;
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    scrollbar-width: none;
+  }
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
   
   /* GitHub热力图样式 */
@@ -515,4 +529,3 @@
     outline: none !important;
     box-shadow: none !important;
   }
-

@@ -1327,7 +1327,7 @@ import { toast } from 'sonner';
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row lg:overflow-hidden lg:h-screen relative"
+      className="h-full min-h-0 bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row overflow-hidden relative"
     >
       {/* 背景图片层 - 亮度滤镜只应用于此层 */}
   {effectiveBgUrl && (
@@ -1346,7 +1346,7 @@ import { toast } from 'sonner';
       )}
 
       {/* 主内容区域 */}
-      <div className="relative z-10 min-h-screen lg:h-full w-full flex flex-col lg:flex-row">
+      <div className="relative z-10 flex-1 w-full flex flex-col lg:flex-row min-h-0">
         
         {/* 左侧热力图区域 */}
         <LeftSidebar
