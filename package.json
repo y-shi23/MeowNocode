@@ -8,7 +8,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.872.0",
@@ -42,6 +44,7 @@
     "@radix-ui/react-toggle-group": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.0",
     "@tanstack/react-query": "^5.48.0",
+    "@tauri-apps/api": "^1.6.0",
     "axios": "^1.6.8",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -74,6 +77,7 @@
   "devDependencies": {
     "@meituan-nocode/vite-plugin-dev-logger": "^0.1.0",
     "@meituan-nocode/vite-plugin-nocode-html-transformer": "^0.2.5",
+    "@tauri-apps/cli": "^1.6.3",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "4.3.4",
@@ -82,6 +86,7 @@
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "png-to-ico": "^3.0.1",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "vite": "5.4.11"

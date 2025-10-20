@@ -6,3 +6,5 @@ wrangler.toml
 package-lock.json
 网易云搜索api.md
 网易云音乐api.md
+AGENTS.md
+CLAUDE.md

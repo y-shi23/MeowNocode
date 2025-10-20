@@ -1,0 +1,36 @@
+{
+  "$schema": "https://schema.tauri.app/config/1",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devPath": "http://localhost:8080",
+    "distDir": "../build"
+  },
+  "package": {
+    "productName": "Meow App",
+    "version": "0.1.0"
+  },
+  "tauri": {
+    "bundle": {
+      "active": true,
+      "identifier": "com.meownocode.app",
+      "targets": ["msi", "nsis"],
+      "icon": [
+        "icons/icon.ico",
+        "icons/icon.png"
+      ]
+    },
+    "security": {
+      "csp": null
+    },
+    "windows": [
+      {
+        "title": "Meow App",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ]
+  }
+}
