@@ -15,7 +15,7 @@ tauri = { version = "1", features = [] }
 
 [features]
 default = ["custom-protocol"]
-custom-protocol = []
+custom-protocol = ["tauri/custom-protocol"]
 
 [package.metadata.tauri]
 config = "tauri.conf.json"
