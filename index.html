@@ -7,6 +7,22 @@
     <link rel="icon" type="image/png" href="https://s3plus.meituan.net/nocode-external/assets/nocode-logo.png">
     <link rel="apple-touch-icon" href="https://s3plus.meituan.net/nocode-external/assets/nocode-logo.png">
     <link rel="shortcut icon" href="https://s3plus.meituan.net/nocode-external/assets/nocode-logo.png">
+    <script>
+      (function () {
+        if (!window.__TAURI__) return;
+        document.documentElement.classList.add('tauri-window');
+        const applyBodyClass = function () {
+          if (document.body) {
+            document.body.classList.add('tauri-window');
+          }
+        };
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', applyBodyClass, { once: true });
+        } else {
+          applyBodyClass();
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

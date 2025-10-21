@@ -1261,7 +1261,7 @@ import { toast } from 'sonner';
 
   return (
     <div
-      className="h-full min-h-0 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden relative rounded-lg"
+      className="app-window h-full w-full min-h-0 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden relative"
     >
       {/* 背景图片层 - 亮度滤镜只应用于此层 */}
   {effectiveBgUrl && (
