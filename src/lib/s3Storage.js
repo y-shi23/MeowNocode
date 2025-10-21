@@ -232,6 +232,60 @@ class S3StorageService {
     }
   }
 
+  async uploadJson(key, data, options = {}) {
+    if (!this.isConfigured()) {
+      throw new Error('S3存储未配置');
+    }
+
+    // 验证配置
+    this.validateConfig();
+
+    const payload = typeof data === 'string' ? data : JSON.stringify(data);
+    const fileName = key || options.fileName || 'data.json';
+    let file;
+    if (typeof File !== 'undefined') {
+      file = new File([payload], fileName.split('/').pop() || 'data.json', {
+        type: 'application/json'
+      });
+    } else {
+      const blob = new Blob([payload], { type: 'application/json' });
+      file = Object.assign(blob, {
+        name: fileName.split('/').pop() || 'data.json',
+        lastModified: Date.now()
+      });
+    }
+
+    return this.uploadFile(file, {
+      type: 'json',
+      fileName,
+      singlePutMaxBytes: options.singlePutMaxBytes
+    });
+  }
+
+  async downloadJson(key) {
+    if (!this.isConfigured()) {
+      throw new Error('S3存储未配置');
+    }
+
+    const url = this.getPublicUrl(key);
+
+    try {
+      const response = await fetch(url, { cache: 'no-store' });
+      if (response.status === 404) {
+        return null;
+      }
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status} ${response.statusText}`);
+      }
+      const text = await response.text();
+      if (!text) return null;
+      return JSON.parse(text);
+    } catch (error) {
+      console.error('S3下载JSON失败:', error);
+      throw new Error(error.message || 'S3下载JSON失败');
+    }
+  }
+
   // 删除文件
   async deleteFile(fileName) {
     if (!this.isConfigured()) {

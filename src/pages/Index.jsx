@@ -14,7 +14,6 @@ import MusicModal from '@/components/MusicModal';
 import MiniMusicPlayer from '@/components/MiniMusicPlayer';
 import MusicSearchCard from '@/components/MusicSearchCard';
 import { useSettings } from '@/context/SettingsContext';
-import { usePasswordAuth } from '@/context/PasswordAuthContext';
 import { addDeletedMemoTombstone } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -73,7 +72,6 @@ import { toast } from 'sonner';
 
   // Context
   const { backgroundConfig, updateBackgroundConfig, aiConfig, keyboardShortcuts, musicConfig, _scheduleCloudSync } = useSettings();
-  const { isAuthenticated } = usePasswordAuth();
   const [currentRandomBgUrl, setCurrentRandomBgUrl] = useState('');
 
   // 临时：如果没有音乐 URL，可使用浏览器可播放的示例音频占位（需用户在设置里替换真实地址）
@@ -479,8 +477,8 @@ import { toast } from 'sonner';
     setPendingNewBacklinks([]);
     setPendingNewAudioClips([]);
 
-    // 🔧 重要：立即触发同步，确保新memo尽快上传到D1
-    if (isAuthenticated && _scheduleCloudSync) {
+    // 🔧 重要：立即触发同步，确保新memo尽快上传到云端存储
+    if (_scheduleCloudSync) {
       try {
         _scheduleCloudSync('memo-add');
       } catch (error) {
@@ -502,8 +500,7 @@ import { toast } from 'sonner';
       const today = new Date();
       const memoCountByDate = {};
 
-      // 获取要统计的memo：仅在登录后统计数据
-      const memosToCount = isAuthenticated ? [...memos, ...pinnedMemos] : [];
+      const memosToCount = [...memos, ...pinnedMemos];
 
       memosToCount.forEach(memo => {
         const createdAt = memo.createdAt || memo.timestamp || new Date().toISOString();
@@ -526,17 +523,12 @@ import { toast } from 'sonner';
     };
 
     setHeatmapData(generateHeatmapData());
-  }, [memos, pinnedMemos, isAuthenticated]); // 添加isAuthenticated依赖
+  }, [memos, pinnedMemos]);
 
   // 统一筛选：标签 / 日期 / 搜索 / 认证状态
   useEffect(() => {
     // 1) 基础：采用置顶 + 普通的并集，优先显示置顶（作为回退列表）
     let base = [...pinnedMemos, ...memos];
-
-    // 未登录用户不展示内容
-    if (!isAuthenticated) {
-      base = [];
-    }
 
     if (activeTag) {
       base = base.filter(memo => {
@@ -572,7 +564,7 @@ import { toast } from 'sonner';
 
     // 无关键词，直接使用 base
     setFilteredMemos(base);
-  }, [memos, pinnedMemos, activeTag, activeDate, searchQuery, isAuthenticated]);
+  }, [memos, pinnedMemos, activeTag, activeDate, searchQuery]);
 
   // 处理菜单操作
   const handleMenuAction = (e, memoId, action) => {
@@ -1292,8 +1284,8 @@ import { toast } from 'sonner';
         {/* 左侧热力图区域 */}
         <LeftSidebar
           heatmapData={heatmapData}
-          memos={isAuthenticated ? memos : []}
-          pinnedMemos={isAuthenticated ? pinnedMemos : []}
+          memos={memos}
+          pinnedMemos={pinnedMemos}
           isLeftSidebarHidden={isLeftSidebarHidden}
           setIsLeftSidebarHidden={setIsLeftSidebarHidden}
           isLeftSidebarPinned={isLeftSidebarPinned}
@@ -1308,7 +1300,6 @@ import { toast } from 'sonner';
           onOpenDailyReview={() => setIsDailyReviewOpen(true)}
           showFavoriteRandomButton={backgroundConfig.useRandom && !backgroundConfig.imageUrl}
           onFavoriteRandomBackground={handleFavoriteRandomBackground}
-          isAuthenticated={isAuthenticated}
         />
 
         {/* 中央主内容区 */}
@@ -1379,8 +1370,6 @@ import { toast } from 'sonner';
                 setMusicSearchKeyword(q);
                 setMusicSearchOpen(true);
               }}
-              // 认证状态
-              isAuthenticated={isAuthenticated}
           />
         )}
 
@@ -1463,7 +1452,7 @@ import { toast } from 'sonner';
       )}
 
       {/* AI按钮 - 在画布模式下不显示，未登录用户也不显示 */}
-      {!isCanvasMode && isAuthenticated && (
+      {!isCanvasMode && (
         <AIButton
           isSettingsOpen={isSettingsOpen}
           isShareDialogOpen={isShareDialogOpen}

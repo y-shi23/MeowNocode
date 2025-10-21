@@ -49,3 +49,10 @@ export function removeDeletedMemoTombstones(ids) {
 export function clearAllDeletedMemoTombstones() {
   try { localStorage.removeItem(TOMBSTONE_KEY) } catch {}
 }
+
+export function setDeletedMemoTombstones(list) {
+  try {
+    const payload = Array.isArray(list) ? list : []
+    localStorage.setItem(TOMBSTONE_KEY, JSON.stringify(payload))
+  } catch {}
+}

@@ -4,11 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { X, Palette, Download, Upload, AlertCircle, CheckCircle, Settings, Database, ChevronDown, ChevronUp, Check, Image as ImageIcon, Github, Cloud, Server, Key, Bot, Keyboard, Star, Music2, Type, Quote } from 'lucide-react';
+import { X, Palette, Download, Upload, AlertCircle, CheckCircle, Settings, Database, ChevronDown, ChevronUp, Check, Image as ImageIcon, Github, Cloud, Key, Bot, Keyboard, Star, Music2, Type, Quote } from 'lucide-react';
 import { useTheme } from '@/context/ThemeContext';
 import { useSettings } from '@/context/SettingsContext';
-import { usePasswordAuth } from '@/context/PasswordAuthContext';
-import { D1ApiClient } from '@/lib/d1-api';
 import ImageUpload from './ImageUpload';
 import { toast } from 'sonner';
 import MemosImport from './MemosImport';
@@ -27,8 +25,6 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
     updateBackgroundConfig = () => {},
     avatarConfig = { imageUrl: '' },
     updateAvatarConfig = () => {},
-    cloudSyncEnabled = false,
-    updateCloudSyncEnabled = () => {},
     manualSync = async () => ({ success: false, message: 'unavailable' }),
     aiConfig = { enabled: false, baseUrl: '', model: '', apiKey: '' },
     updateAiConfig = () => {},
@@ -37,14 +33,23 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
     _scheduleCloudSync = () => {},
     musicConfig = { enabled: false, playlists: [] },
     updateMusicConfig = () => {},
-    s3Config = { enabled: false },
+    s3Config = {
+      enabled: false,
+      endpoint: '',
+      accessKeyId: '',
+      secretAccessKey: '',
+      bucket: '',
+      region: 'auto',
+      publicUrl: '',
+      provider: 'r2'
+    },
     updateS3Config = () => {},
   } = settingsCtx;
-  const { isAuthenticated } = usePasswordAuth();
   const [tempColor, setTempColor] = useState(themeColor);
   const [activeTab, setActiveTab] = useState('general');
 
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isS3ConfigOpen, setIsS3ConfigOpen] = useState(false);
 
   const [expandedSections, setExpandedSections] = useState({
     hitokoto: false,
@@ -129,6 +134,11 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  const handleToggleS3 = () => {
+    const nextEnabled = !s3Config?.enabled;
+    updateS3Config({ ...s3Config, enabled: nextEnabled });
   };
 
 
@@ -1437,79 +1447,74 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
           {/* 数据管理设置 */}
           {activeTab === 'data' && (
             <div className="space-y-6">
-              {/* 云端同步设置 */}
+              {/* S3存储配置 */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium flex items-center">
                     <Cloud className="h-4 w-4 mr-2" />
-                    云端数据同步
+                    S3存储配置
                   </Label>
                   <button
-                    onClick={() => updateCloudSyncEnabled(!cloudSyncEnabled)}
+                    onClick={handleToggleS3}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      cloudSyncEnabled
+                      s3Config?.enabled
                         ? 'bg-blue-600'
                         : 'bg-gray-200 dark:bg-gray-700'
                     }`}
-                    style={cloudSyncEnabled ? { backgroundColor: themeColor } : {}}
+                    style={s3Config?.enabled ? { backgroundColor: themeColor } : {}}
+                    type="button"
                   >
                     <span
                       className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        cloudSyncEnabled ? 'translate-x-6' : 'translate-x-1'
+                        s3Config?.enabled ? 'translate-x-6' : 'translate-x-1'
                       }`}
                     />
                   </button>
                 </div>
 
-                {cloudSyncEnabled && (
-                  <>
-                    {/* 云同步配置 */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium">云同步配置 (Cloudflare D1)</Label>
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center space-x-3">
-                          <Server className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                              Cloudflare D1 数据库
-                            </p>
-                            <p className="text-xs text-gray-700 dark:text-gray-300">
-                              数据将自动同步到Cloudflare D1数据库
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="flex items-center space-x-2">
-                          <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          <span className="text-sm text-green-800 dark:text-green-200">
-                            已连接到 Cloudflare D1 数据库
-                          </span>
-                        </div>
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setIsS3ConfigOpen(true)}
+                  className={`w-full text-left p-3 rounded-lg border ${
+                    s3Config?.enabled
+                      ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
+                      : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700'
+                  } transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-900`}
+                  style={{ '--tw-ring-color': themeColor }}
+                >
+                  <div className="flex items-center space-x-2">
+                    {s3Config?.enabled ? (
+                      <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    ) : (
+                      <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    )}
+                    <span className="text-sm text-gray-800 dark:text-gray-200">
+                      {s3Config?.enabled ? 'S3 存储已启用' : '尚未启用 S3 存储'}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    点击配置 S3 连接参数
+                  </p>
+                </button>
 
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={handleManualSync}
-                          disabled={isSyncing}
-                          size="sm"
-                          className="flex-1"
-                          style={{ backgroundColor: themeColor }}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          {isSyncing ? '同步中...' : '手动同步'}
-                        </Button>
-                      </div>
-                    </div>
-                  </>
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleManualSync}
+                    disabled={isSyncing || !s3Config?.enabled}
+                    size="sm"
+                    className="flex-1"
+                    style={{ backgroundColor: themeColor }}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {isSyncing ? '同步中...' : '立即同步'}
+                  </Button>
+                </div>
+
+                {!s3Config?.enabled && (
+                  <p className="text-xs text-red-500">
+                    请启用并保存 S3 配置后再进行云同步。
+                  </p>
                 )}
-              </div>
-
-              {/* S3存储配置 */}
-              <div className="space-y-4">
-                <S3ConfigPanel s3Config={s3Config} updateS3Config={updateS3Config} />
               </div>
 
               {/* 本地数据管理 */}
@@ -1560,6 +1565,12 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
           )}
         </CardContent>
       </Card>
+      <S3ConfigPanel
+        s3Config={s3Config}
+        updateS3Config={updateS3Config}
+        open={isS3ConfigOpen}
+        onOpenChange={setIsS3ConfigOpen}
+      />
     </div>
   );
 };
