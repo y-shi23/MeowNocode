@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import { SettingsProvider } from "@/context/SettingsContext";
 import { MusicProvider } from "@/context/MusicContext";
 import Index from "@/pages/Index";
+import StickyMemoWindow from "@/pages/StickyMemoWindow";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
                 {navItems.map(({ to, page }) => (
                   <Route key={to} path={to} element={page} />
                 ))}
+                <Route path="/sticky/:memoId" element={<StickyMemoWindow />} />
                 <Route path="*" element={<Index />} />
               </Routes>
             </HashRouter>

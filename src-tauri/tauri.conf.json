@@ -23,6 +23,17 @@
     "security": {
       "csp": null
     },
+    "allowlist": {
+      "window": {
+        "create": true,
+        "close": true,
+        "setFocus": true,
+        "setAlwaysOnTop": true,
+        "setDecorations": true,
+        "startDragging": true,
+        "setPosition": true
+      }
+    },
     "windows": [
       {
         "title": "Meow App",

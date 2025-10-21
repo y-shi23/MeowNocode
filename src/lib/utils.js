@@ -5,6 +5,10 @@ export function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
+export function isTauri() {
+  return typeof window !== 'undefined' && !!window.__TAURI__
+}
+
 // --- Deletion tombstones helpers ---
 const TOMBSTONE_KEY = 'deletedMemoIds'
 

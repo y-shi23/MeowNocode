@@ -1,10 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Clock, MoreVertical, ArrowUp, X, Image } from 'lucide-react';
 import MemoEditor from '@/components/MemoEditor';
 import ContentRenderer from '@/components/ContentRenderer';
 import { useTheme } from '@/context/ThemeContext';
 import fileStorageService from '@/lib/fileStorageService';
+import { toast } from 'sonner';
+import { openStickyMemoWindow } from '@/lib/stickyMemoWindow';
+import { isTauri } from '@/lib/utils';
+
+const DRAG_THRESHOLD_PX = 24;
+const OUTSIDE_MARGIN_PX = 12;
+const INTERACTIVE_SELECTOR = 'button, a, textarea, input, [data-ignore-drag], [role="menu"], [role="dialog"], [contenteditable="true"]';
 
 const MemoList = ({
   memos,
@@ -43,6 +50,24 @@ const MemoList = ({
   const [audioUrls, setAudioUrls] = useState({});
   const audioRefs = useRef({});
   const [playing, setPlaying] = useState({});
+  const pointerStateRef = useRef(new Map());
+
+  useEffect(() => {
+    return () => {
+      pointerStateRef.current.clear();
+    };
+  }, []);
+
+  const attemptCreateStickyMemo = useCallback(async (memo, coords) => {
+    if (!memo || !isTauri()) return;
+    try {
+      await openStickyMemoWindow(memo, coords);
+      toast.success('已创建便签窗口');
+    } catch (error) {
+      console.error('Failed to open sticky memo window:', error);
+      toast.error(error?.message || '创建便签窗口失败');
+    }
+  }, []);
 
   const formatMs = (ms) => {
     if (!ms && ms !== 0) return '';
@@ -51,6 +76,115 @@ const MemoList = ({
     const s = sec % 60;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
+
+  const createPointerDownHandler = (memo) => (event) => {
+    if (!isTauri()) return;
+    if (!memo) return;
+    if (editingId && editingId === memo.id) return;
+
+    if (typeof event.button === 'number' && event.button !== 0) return;
+    if (typeof event.buttons === 'number' && event.buttons !== 1) return;
+
+    const target = event.target;
+    if (target && typeof target.closest === 'function' && target.closest(INTERACTIVE_SELECTOR)) {
+      return;
+    }
+
+    const pointerId = event.pointerId;
+    if (pointerId == null) return;
+
+    const element = event.currentTarget;
+    if (!element) return;
+
+    const state = {
+      memo,
+      element,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startScreenX: event.screenX,
+      startScreenY: event.screenY,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      lastScreenX: event.screenX,
+      lastScreenY: event.screenY,
+      active: false
+    };
+
+    pointerStateRef.current.set(pointerId, state);
+    try {
+      element.setPointerCapture(pointerId);
+    } catch {}
+  };
+
+  const handlePointerMove = (event) => {
+    const state = pointerStateRef.current.get(event.pointerId);
+    if (!state) return;
+
+    state.lastClientX = event.clientX;
+    state.lastClientY = event.clientY;
+    state.lastScreenX = event.screenX;
+    state.lastScreenY = event.screenY;
+
+    if (state.active) {
+      event.preventDefault();
+      return;
+    }
+
+    const dx = event.clientX - state.startClientX;
+    const dy = event.clientY - state.startClientY;
+    if (!Number.isFinite(dx) || !Number.isFinite(dy)) return;
+
+    if (Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX) {
+      state.active = true;
+      if (state.element) {
+        state.element.dataset.dragging = 'true';
+      }
+      event.preventDefault();
+    }
+  };
+
+  const finalizePointer = (event, shouldTrigger) => {
+    const state = pointerStateRef.current.get(event.pointerId);
+    if (!state) return;
+
+    pointerStateRef.current.delete(event.pointerId);
+
+    const element = state.element || event.currentTarget;
+    if (element) {
+      if (element.dataset && element.dataset.dragging) {
+        delete element.dataset.dragging;
+      }
+      try {
+        element.releasePointerCapture(event.pointerId);
+      } catch {}
+    }
+
+    if (!shouldTrigger || !state.active) return;
+
+    const clientX = Number.isFinite(event.clientX) ? event.clientX : state.lastClientX;
+    const clientY = Number.isFinite(event.clientY) ? event.clientY : state.lastClientY;
+
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) return;
+
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
+
+    const outsideViewport =
+      clientX <= OUTSIDE_MARGIN_PX ||
+      clientX >= (viewportWidth - OUTSIDE_MARGIN_PX) ||
+      clientY <= OUTSIDE_MARGIN_PX ||
+      clientY >= (viewportHeight - OUTSIDE_MARGIN_PX);
+
+    if (!outsideViewport) return;
+
+    const screenX = Number.isFinite(event.screenX) ? event.screenX : state.lastScreenX;
+    const screenY = Number.isFinite(event.screenY) ? event.screenY : state.lastScreenY;
+
+    attemptCreateStickyMemo(state.memo, { screenX, screenY });
+  };
+
+  const handlePointerUp = (event) => finalizePointer(event, true);
+  const handlePointerCancel = (event) => finalizePointer(event, false);
 
   // Resolve audio urls for clips stored in indexeddb/base64
   useEffect(() => {
@@ -188,10 +322,14 @@ const MemoList = ({
       {memos.map(memo => (
                 <Card
                   key={memo.id}
-                  className={`group hover:shadow-md transition-shadow rounded-xl shadow-sm relative bg-white dark:bg-gray-800 ${
+                  className={`group hover:shadow-md transition-shadow rounded-xl shadow-sm relative bg-white dark:bg-gray-800 data-[dragging=true]:ring-2 data-[dragging=true]:ring-blue-300/70 dark:data-[dragging=true]:ring-blue-400/40 data-[dragging=true]:shadow-2xl ${
                     pinnedMemos.some(p => p.id === memo.id) ? 'border-l-4' : ''
                   }`}
                   style={pinnedMemos.some(p => p.id === memo.id) ? { borderLeftColor: themeColor } : {}}
+                  onPointerDown={createPointerDownHandler(memo)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerCancel}
                 >
                   <CardContent className="p-3 sm:p-4">
 
