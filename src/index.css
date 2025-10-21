@@ -25,7 +25,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 258 100% 50%;
     --radius: 0.75rem;
-    --window-radius: 18px;
+    --window-radius: 12px;
     --theme-color: #818CF8;
   }
 
@@ -135,6 +135,28 @@
 
   html.dark body.tauri-window::after {
     border-color: rgba(148, 163, 184, 0.18);
+  }
+  body.tauri-window-fullscreen {
+    --window-radius: 0px;
+  }
+
+  body.tauri-window-fullscreen #root {
+    clip-path: none;
+    -webkit-clip-path: none;
+  }
+
+  body.tauri-window-fullscreen::before {
+    box-shadow: none;
+    opacity: 0;
+  }
+
+  body.tauri-window-fullscreen::after {
+    border-width: 0;
+    opacity: 0;
+  }
+
+  body.tauri-window-fullscreen .app-window {
+    border-radius: 0;
   }
   body::-webkit-scrollbar {
     width: 0;

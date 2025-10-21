@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Meow App",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "tauri": {
     "bundle": {
@@ -23,6 +23,19 @@
     "security": {
       "csp": null
     },
+    "windows": [
+      {
+        "title": "Meow App",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 1024,
+        "minHeight": 640,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true
+      }
+    ],
     "allowlist": {
       "window": {
         "create": true,
@@ -37,19 +50,9 @@
         "unmaximize": true
       }
     },
-    "windows": [
-      {
-        "title": "Meow App",
-        "width": 1280,
-        "height": 800,
-        "minWidth": 1024,
-        "minHeight": 640,
-        "resizable": true,
-        "fullscreen": false,
-        "decorations": false,
-        "transparent": true,
-        "shadow": false
-      }
-    ]
+    "systemTray": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true
+    }
   }
 }
