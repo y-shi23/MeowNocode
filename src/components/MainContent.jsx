@@ -1,5 +1,4 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Header from '@/components/Header';
 import MemoInput from '@/components/MemoInput';
 import MemoList from '@/components/MemoList';
@@ -34,7 +33,6 @@ const MainContent = ({
   menuRefs,
 
   // Callbacks
-  onMobileMenuOpen,
   onAddMemo,
   onMenuAction,
   onMenuContainerEnter,
@@ -48,9 +46,7 @@ const MainContent = ({
   clearFilters, // 新增清除筛选函数
   onEditorFocus,
   onEditorBlur,
-  onOpenMusic,
   onOpenMusicSearch,
-  musicEnabled = true,
   // backlinks
   allMemos,
   onAddBacklink,
@@ -81,8 +77,7 @@ const MainContent = ({
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         searchInputRef={searchInputRef}
-  onMobileMenuOpen={onMobileMenuOpen}
-  onOpenMusicSearch={onOpenMusicSearch}
+        onOpenMusicSearch={onOpenMusicSearch}
       />
 
       {/* 编辑区域 - 只在已认证时显示 */}

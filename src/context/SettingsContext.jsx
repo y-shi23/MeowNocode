@@ -76,80 +76,6 @@ export function SettingsProvider({ children }) {
   const pendingRef = React.useRef(false);
   const lastSyncAtRef = React.useRef(0);
 
-  // 游客模式数据刷新逻辑
-  const refreshPublicData = React.useCallback(async () => {
-    if (isAuthenticated) return; // 只在游客模式下执行
-
-    try {
-      let res;
-      try {
-        // 优先使用API获取公开数据
-        res = await D1ApiClient.getPublicData();
-      } catch (apiError) {
-        console.warn('API获取公开数据失败，尝试直接数据库访问:', apiError);
-        // API失败时降级到直接数据库访问
-        const dbMemos = await D1DatabaseService.getPublicMemos();
-        res = {
-          success: true,
-          data: { memos: dbMemos }
-        };
-      }
-
-      if (res?.success && res.data?.memos) {
-        const currentMemos = JSON.parse(localStorage.getItem('memos') || '[]');
-        const newMemos = res.data.memos.map(memo => ({
-          id: memo.memo_id,
-          content: memo.content,
-          tags: JSON.parse(memo.tags || '[]'),
-          backlinks: JSON.parse(memo.backlinks || '[]'),
-          audioClips: JSON.parse(memo.audio_clips || '[]'),
-          is_public: memo.is_public ? true : false,
-          timestamp: memo.created_at,
-          lastModified: memo.updated_at,
-          createdAt: memo.created_at,
-          updatedAt: memo.updated_at
-        }));
-
-        // 检查是否有新数据
-        const currentIds = new Set(currentMemos.map(m => m.id));
-        const newIds = new Set(newMemos.map(m => m.id));
-        const hasNewData = newMemos.length !== currentMemos.length ||
-          !Array.from(newIds).every(id => currentIds.has(id));
-
-        if (hasNewData) {
-          localStorage.setItem('memos', JSON.stringify(newMemos));
-          try {
-            window.dispatchEvent(new CustomEvent('app:dataChanged', {
-              detail: { part: 'guest.refresh', newCount: newMemos.length - currentMemos.length }
-            }));
-          } catch {}
-        }
-      }
-    } catch (error) {
-      console.error('刷新公开数据失败:', error);
-    }
-  }, [isAuthenticated]);
-
-  // 游客模式定期刷新
-  useEffect(() => {
-    if (isAuthenticated) return; // 只在游客模式下执行
-
-    // 立即检查一次
-    refreshPublicData();
-
-    // 设置定期刷新 (每2分钟)
-    const interval = setInterval(refreshPublicData, 2 * 60 * 1000);
-
-    // 页面获得焦点时也刷新一次
-    const onFocus = () => refreshPublicData();
-    window.addEventListener('focus', onFocus);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
-    };
-  }, [isAuthenticated, refreshPublicData]);
-
   const dispatchDataChanged = (detail = {}) => {
     try {
       window.dispatchEvent(new CustomEvent('app:dataChanged', { detail }));
@@ -193,7 +119,6 @@ export function SettingsProvider({ children }) {
             tags: JSON.parse(m.tags || '[]'),
             backlinks: JSON.parse(m.backlinks || '[]'),
             audio_clips: JSON.parse(m.audio_clips || '[]'),
-            is_public: m.is_public ? true : false,
             created_at: m.created_at,
             updated_at: m.updated_at
           }));
@@ -209,7 +134,6 @@ export function SettingsProvider({ children }) {
             tags: JSON.parse(m.tags || '[]'),
             backlinks: JSON.parse(m.backlinks || '[]'),
             audio_clips: JSON.parse(m.audio_clips || '[]'),
-            is_public: m.is_public ? true : false,
             created_at: m.created_at,
             updated_at: m.updated_at
           }));
@@ -302,7 +226,6 @@ export function SettingsProvider({ children }) {
                 tags: cm.tags || [],
                 backlinks: cm.backlinks || [],
                 audioClips: cm.audio_clips || pm.audioClips || [],
-                is_public: cm.is_public ? true : false, // 🔧 添加is_public字段映射
                 updatedAt: cm.updated_at,
                 lastModified: cm.updated_at
               });
@@ -321,7 +244,6 @@ export function SettingsProvider({ children }) {
               tags: cm.tags || [],
               backlinks: cm.backlinks || [],
               audioClips: Array.isArray(cm.audio_clips) ? cm.audio_clips : [],
-              is_public: cm.is_public ? true : false, // 🔧 添加is_public字段映射
               createdAt: cm.created_at,
               updatedAt: cm.updated_at,
               timestamp: cm.created_at,
@@ -338,7 +260,6 @@ export function SettingsProvider({ children }) {
                 tags: cm.tags || [],
                 backlinks: cm.backlinks || [],
                 audioClips: Array.isArray(cm.audio_clips) ? cm.audio_clips : (Array.isArray(lm.audioClips) ? lm.audioClips : []),
-                is_public: cm.is_public ? true : false, // 🔧 添加is_public字段映射
                 updatedAt: cm.updated_at,
                 lastModified: cm.updated_at
               });
@@ -352,7 +273,6 @@ export function SettingsProvider({ children }) {
             ...m,
             backlinks: Array.isArray(m.backlinks) ? m.backlinks : [],
             audioClips: Array.isArray(m.audioClips) ? m.audioClips : [],
-            is_public: typeof m.is_public === 'boolean' ? m.is_public : false // 🔧 确保is_public字段一致性
           })).sort((a, b) => new Date(b.createdAt || b.timestamp || 0) - new Date(a.createdAt || a.timestamp || 0));
           localStorage.setItem('memos', JSON.stringify(merged));
           if (removedIds.length && Array.isArray(pinned)) {
@@ -711,17 +631,13 @@ export function SettingsProvider({ children }) {
           return;
         }
 
-        // 简化逻辑：只使用D1，移除Supabase复杂判断
-        // 对于游客模式，获取公开数据；对于认证用户，获取全部数据
+        // 简化逻辑：只使用D1恢复登录用户数据
+        if (!isAuthenticated) {
+          return;
+        }
+
         try {
-          let res;
-          if (!isAuthenticated) {
-            // 游客模式：只获取公开数据
-            res = await D1ApiClient.getPublicData();
-          } else {
-            // 认证用户：获取全部数据
-            res = await D1ApiClient.restoreUserData();
-          }
+          const res = await D1ApiClient.restoreUserData();
 
           if (!res?.success) throw new Error('API restore failed');
 
@@ -733,7 +649,6 @@ export function SettingsProvider({ children }) {
               tags: JSON.parse(memo.tags || '[]'),
               backlinks: JSON.parse(memo.backlinks || '[]'),
               audioClips: JSON.parse(memo.audio_clips || '[]'),
-              is_public: memo.is_public ? true : false,
               timestamp: memo.created_at,
               lastModified: memo.updated_at,
               createdAt: memo.created_at,
@@ -747,14 +662,7 @@ export function SettingsProvider({ children }) {
           console.warn('D1 API客户端失败，尝试直接访问D1数据库', apiError);
 
           try {
-            let dbMemos;
-            if (!isAuthenticated) {
-              // 游客模式：只获取公开memo
-              dbMemos = await D1DatabaseService.getPublicMemos();
-            } else {
-              // 认证用户：获取全部memo
-              dbMemos = await D1DatabaseService.getAllMemos();
-            }
+            const dbMemos = await D1DatabaseService.getAllMemos();
 
             if (dbMemos && dbMemos.length > 0) {
               const localMemos = dbMemos.map(memo => ({
@@ -763,7 +671,6 @@ export function SettingsProvider({ children }) {
                 tags: JSON.parse(memo.tags || '[]'),
                 backlinks: JSON.parse(memo.backlinks || '[]'),
                 audioClips: JSON.parse(memo.audio_clips || '[]'),
-                is_public: memo.is_public ? true : false,
                 timestamp: memo.created_at,
                 lastModified: memo.updated_at,
                 createdAt: memo.created_at,
@@ -957,17 +864,10 @@ export function SettingsProvider({ children }) {
       updateMusicConfig,
       s3Config,
       updateS3Config: setS3Config,
-      // Sync public helpers
-      _scheduleCloudSync: scheduleSync,
-      // 游客模式刷新功能
-      refreshPublicData
+      // Sync helper
+      _scheduleCloudSync: scheduleSync
     }}>
       {children}
     </SettingsContext.Provider>
   );
 }
-
-
-
-
-

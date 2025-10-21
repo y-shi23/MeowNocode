@@ -1,52 +1,20 @@
-import React, { useState } from 'react';
-import { Menu, Search, Headphones, RefreshCw } from 'lucide-react';
+import React from 'react';
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useTheme } from '@/context/ThemeContext';
-import { useSettings } from '@/context/SettingsContext';
-import { usePasswordAuth } from '@/context/PasswordAuthContext';
 
 const Header = ({
   searchQuery,
   setSearchQuery,
   searchInputRef,
-  onMobileMenuOpen,
-  onOpenMusic,
-  onOpenMusicSearch, // 新增：触发音乐搜索卡片
-  musicEnabled = true,
+  onOpenMusicSearch,
 }) => {
   const { themeColor } = useTheme();
-  const { refreshPublicData } = useSettings();
-  const { isAuthenticated } = usePasswordAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const handleRefresh = async () => {
-    if (isAuthenticated || isRefreshing) return;
-
-    setIsRefreshing(true);
-    try {
-      await refreshPublicData();
-    } catch (error) {
-      console.error('手动刷新失败:', error);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
 
   return (
     <div className="flex items-center justify-between p-4 bg-transparent">
-      {/* 左侧：汉堡菜单按钮（移动端）+ Logo */}
+      {/* 左侧：Logo */}
       <div className="flex items-center">
-        {/* 汉堡菜单按钮 - 仅在移动端显示 */}
-        <button
-          onClick={onMobileMenuOpen}
-          className="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all duration-300 hover:bg-gray-300 dark:hover:bg-gray-600 mr-3"
-          aria-label="打开菜单"
-          title="打开菜单"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-
-        {/* Logo */}
         <img
           src="https://s3.bmp.ovh/imgs/2025/07/31/baf5bf7ff49cae82.jpg"
           alt="应用Logo"
@@ -60,21 +28,8 @@ const Header = ({
         </span>
       </div>
 
-      {/* 右侧：搜索框 + 刷新按钮（游客模式）*/}
+      {/* 右侧：搜索框 */}
       <div className="flex items-center gap-2">
-        {/* 游客模式刷新按钮 */}
-        {!isAuthenticated && (
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 transition-all duration-300 hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50"
-            aria-label="刷新公开内容"
-            title="刷新公开内容"
-          >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-          </button>
-        )}
-
         <div className="relative w-48 sm:w-64 md:w-80">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />
@@ -89,8 +44,7 @@ const Header = ({
               if (e.key === 'Enter') {
                 const q = (searchQuery || '').trim();
                 if (q) {
-                  // 仅触发音乐搜索卡片展示，不改变现有过滤逻辑
-                  onOpenMusicSearch && onOpenMusicSearch(q);
+                  onOpenMusicSearch?.(q);
                 }
               }
             }}

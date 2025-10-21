@@ -3,7 +3,6 @@ import LeftSidebar from '@/components/LeftSidebar';
 import RightSidebar from '@/components/RightSidebar';
 import MainContent from '@/components/MainContent';
 import CanvasMode from '@/components/CanvasMode';
-import MobileSidebar from '@/components/MobileSidebar';
 import SettingsCard from '@/components/SettingsCard';
 import ShareDialog from '@/components/ShareDialog';
 import AIButton from '@/components/AIButton';
@@ -41,7 +40,6 @@ import { toast } from 'sonner';
   const [isRightSidebarHovered, setIsRightSidebarHovered] = useState(false);
   const [isAppLoaded, setIsAppLoaded] = useState(false);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [selectedMemo, setSelectedMemo] = useState(null);
@@ -87,19 +85,6 @@ import { toast } from 'sonner';
       }));
     }
   }, []);
-
-  // 控制移动端侧栏打开时的页面滚动
-  useEffect(() => {
-    if (isMobileSidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isMobileSidebarOpen]);
 
   // 处理左侧栏鼠标悬停事件（AI 对话或每日回顾打开时禁用）
   useEffect(() => {
@@ -260,7 +245,6 @@ import { toast } from 'sonner';
       updatedAt: memo.updatedAt || memo.lastModified || new Date().toISOString(),
       backlinks: Array.isArray(memo.backlinks) ? memo.backlinks : [],
       audioClips: Array.isArray(memo.audioClips) ? memo.audioClips : [],
-      is_public: typeof memo.is_public === 'boolean' ? memo.is_public : false, // 为旧memo设置默认值
       // 画布位置：优先使用 memo 自身保存的，退回到 canvasState.memoPositions
       canvasX: (typeof memo.canvasX === 'number' ? memo.canvasX : (memoPositions[memo.id]?.x)),
       canvasY: (typeof memo.canvasY === 'number' ? memo.canvasY : (memoPositions[memo.id]?.y))
@@ -349,7 +333,6 @@ import { toast } from 'sonner';
             updatedAt: memo.updatedAt || memo.lastModified || new Date().toISOString(),
             backlinks: Array.isArray(memo.backlinks) ? memo.backlinks : [],
             audioClips: Array.isArray(memo.audioClips) ? memo.audioClips : [],
-            is_public: typeof memo.is_public === 'boolean' ? memo.is_public : false, // 为旧memo设置默认值
             canvasX: (typeof memo.canvasX === 'number' ? memo.canvasX : (memoPositions[memo.id]?.x)),
             canvasY: (typeof memo.canvasY === 'number' ? memo.canvasY : (memoPositions[memo.id]?.y))
           }));
@@ -474,8 +457,7 @@ import { toast } from 'sonner';
       timestamp: nowIso,
       lastModified: nowIso,
       backlinks: Array.isArray(pendingNewBacklinks) ? pendingNewBacklinks : [],
-      audioClips: Array.isArray(pendingNewAudioClips) ? pendingNewAudioClips : [],
-      is_public: false // 默认为私有
+      audioClips: Array.isArray(pendingNewAudioClips) ? pendingNewAudioClips : []
     };
 
     // 更新现有 memos 与 pinnedMemos，将新 memoId 写入被选目标的 backlinks（双向）
@@ -520,11 +502,8 @@ import { toast } from 'sonner';
       const today = new Date();
       const memoCountByDate = {};
 
-      // 获取要统计的memo：认证用户统计全部，游客只统计公开memo
-      let memosToCount = [...memos, ...pinnedMemos];
-      if (!isAuthenticated) {
-        memosToCount = memosToCount.filter(memo => memo.is_public);
-      }
+      // 获取要统计的memo：仅在登录后统计数据
+      const memosToCount = isAuthenticated ? [...memos, ...pinnedMemos] : [];
 
       memosToCount.forEach(memo => {
         const createdAt = memo.createdAt || memo.timestamp || new Date().toISOString();
@@ -554,9 +533,9 @@ import { toast } from 'sonner';
     // 1) 基础：采用置顶 + 普通的并集，优先显示置顶（作为回退列表）
     let base = [...pinnedMemos, ...memos];
 
-    // 未登录用户只能看到公开的memo
+    // 未登录用户不展示内容
     if (!isAuthenticated) {
-      base = base.filter(memo => memo.is_public);
+      base = [];
     }
 
     if (activeTag) {
@@ -600,44 +579,6 @@ import { toast } from 'sonner';
     e.stopPropagation();
 
     switch (action) {
-      case 'toggle-public':
-        // 切换公开状态
-        const updateMemoPublicStatus = (list) => list.map(memo =>
-          memo.id === memoId
-            ? { ...memo, is_public: !memo.is_public, updatedAt: new Date().toISOString() }
-            : memo
-        );
-        const updatedMemos = updateMemoPublicStatus(memos);
-        const updatedPinnedMemos = updateMemoPublicStatus(pinnedMemos);
-
-        setMemos(updatedMemos);
-        setPinnedMemos(updatedPinnedMemos);
-
-        // 立即保存到localStorage以确保持久化
-        localStorage.setItem('memos', JSON.stringify(updatedMemos));
-        localStorage.setItem('pinnedMemos', JSON.stringify(updatedPinnedMemos));
-
-        // 提示用户操作成功
-        const targetMemo = [...updatedMemos, ...updatedPinnedMemos].find(m => m.id === memoId);
-        if (targetMemo) {
-          toast.success(targetMemo.is_public ? '已设为公开' : '已设为私有');
-        }
-
-        // 🔧 触发立即同步以保存公开状态变更
-        if (isAuthenticated && _scheduleCloudSync) {
-          try {
-            _scheduleCloudSync('public-status-change');
-          } catch (error) {
-            console.warn('立即同步失败:', error);
-          }
-        }
-
-        try {
-          window.dispatchEvent(new CustomEvent('app:dataChanged', {
-            detail: { part: 'memo.update', priority: 'high', id: memoId }
-          }));
-        } catch {}
-        break;
   case 'pin':
         const memoToPin = memos.find(memo => memo.id === memoId);
         if (memoToPin && !pinnedMemos.some(p => p.id === memoId)) {
@@ -1351,8 +1292,8 @@ import { toast } from 'sonner';
         {/* 左侧热力图区域 */}
         <LeftSidebar
           heatmapData={heatmapData}
-          memos={isAuthenticated ? memos : memos.filter(memo => memo.is_public)}
-          pinnedMemos={isAuthenticated ? pinnedMemos : pinnedMemos.filter(memo => memo.is_public)}
+          memos={isAuthenticated ? memos : []}
+          pinnedMemos={isAuthenticated ? pinnedMemos : []}
           isLeftSidebarHidden={isLeftSidebarHidden}
           setIsLeftSidebarHidden={setIsLeftSidebarHidden}
           isLeftSidebarPinned={isLeftSidebarPinned}
@@ -1411,7 +1352,6 @@ import { toast } from 'sonner';
             menuRefs={menuRefs}
             
             // Callbacks
-            onMobileMenuOpen={() => setIsMobileSidebarOpen(true)}
             onAddMemo={addMemo}
             onMenuAction={handleMenuAction}
             onMenuContainerEnter={handleMenuContainerEnter}
@@ -1435,10 +1375,6 @@ import { toast } from 'sonner';
             pendingNewAudioClips={pendingNewAudioClips}
             onRemoveAudioClip={handleRemoveAudioClip}
             onAddAudioClip={handleAddAudioClip}
-              onOpenMusic={() => {
-                if (musicConfig?.enabled) setMusicModal((m) => ({ ...m, isOpen: true }));
-              }}
-              musicEnabled={!!musicConfig?.enabled}
               onOpenMusicSearch={(q) => {
                 setMusicSearchKeyword(q);
                 setMusicSearchOpen(true);
@@ -1463,20 +1399,6 @@ import { toast } from 'sonner';
           isCanvasMode={isCanvasMode}
         />
       </div>
-
-      {/* 移动端侧栏 */}
-      <MobileSidebar
-        isOpen={isMobileSidebarOpen}
-        onClose={() => setIsMobileSidebarOpen(false)}
-        heatmapData={heatmapData}
-        memos={isAuthenticated ? [...memos, ...pinnedMemos] : [...memos, ...pinnedMemos].filter(memo => memo.is_public)}
-        activeTag={activeTag}
-        setActiveTag={(tag) => { setActiveTag(tag); setActiveDate(null); }}
-        onSettingsOpen={() => setIsSettingsOpen(true)}
-        onDateClick={handleDateClick}
-        isAuthenticated={isAuthenticated}
-  onOpenMusic={() => { if (musicConfig?.enabled) setMusicModal((m) => ({ ...m, isOpen: true })); }}
-      />
 
       {/* 设置卡片 */}
       <SettingsCard

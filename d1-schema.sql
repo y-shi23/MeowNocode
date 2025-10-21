@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS memos (
   tags TEXT DEFAULT '[]',
   backlinks TEXT DEFAULT '[]',
   audio_clips TEXT DEFAULT '[]',
-  is_public INTEGER DEFAULT 0,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Clock, MoreVertical, ArrowUp, X, Image, Globe, Lock } from 'lucide-react';
+import { Clock, MoreVertical, ArrowUp, X, Image } from 'lucide-react';
 import MemoEditor from '@/components/MemoEditor';
 import ContentRenderer from '@/components/ContentRenderer';
 import { useTheme } from '@/context/ThemeContext';
@@ -173,7 +173,7 @@ const MemoList = ({
       {/* 滚动容器 */}
   <div
         ref={memosContainerRef}
-        className="flex-1 overflow-y-auto mobile-memos-container lg:mobile-memos-container-disabled px-3 sm:px-4 lg:px-6 pb-3 sm:pb-4 lg:pb-6 min-h-[250px]"
+        className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-6 pb-3 sm:pb-4 lg:pb-6 min-h-[250px] scrollbar-hidden"
       >
     {memos.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-gray-500">
@@ -205,7 +205,7 @@ const MemoList = ({
                     >
                       <button
                         onClick={() => onMenuButtonClick(memo.id)}
-                        className="p-1 rounded-full hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100 touch:opacity-100"
+                        className="p-1 rounded-full hover:bg-gray-200 transition-colors opacity-0 group-hover:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                         aria-label="操作菜单"
                       >
                         <MoreVertical className="h-4 w-4 text-gray-500" />
@@ -218,26 +218,6 @@ const MemoList = ({
                           onClick={(e) => e.stopPropagation()}
                           style={getMenuPosition(memo.id).style}
                         >
-                          {/* 公开/私有切换按钮 */}
-                          {isAuthenticated && (
-                            <button
-                              onClick={(e) => onMenuAction(e, memo.id, 'toggle-public')}
-                              className="block w-full text-left px-3 py-2 sm:px-4 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                            >
-                              {memo.is_public ? (
-                                <>
-                                  <Lock className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="truncate">设为私有</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Globe className="h-4 w-4 mr-2 flex-shrink-0" />
-                                  <span className="truncate">设为公开</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-
                           {/* 置顶/取消置顶按钮 */}
                           {pinnedMemos.some(p => p.id === memo.id) ? (
                             <button
@@ -419,17 +399,6 @@ const MemoList = ({
                     )}
 
                     <div className="mt-3 flex items-center justify-end space-x-2">
-                      {/* 公开状态图标 - 仅登录用户可见 */}
-                      {isAuthenticated && (
-                        <div className="flex items-center">
-                          {memo.is_public ? (
-                            <Globe className="h-4 w-4 text-green-600 dark:text-green-400" title="公开" />
-                          ) : (
-                            <Lock className="h-4 w-4 text-gray-500 dark:text-gray-400" title="私有" />
-                          )}
-                        </div>
-                      )}
-
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(memo.updatedAt).toLocaleString('zh-CN', {
                           month: 'short',

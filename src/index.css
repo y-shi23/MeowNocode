@@ -191,25 +191,6 @@
 
   /* 文本选择样式将通过JavaScript动态设置 */
 
-  /* 移动端优化 */
-  @media (max-width: 640px) {
-    /* 触摸设备上的菜单按钮始终可见 */
-    .touch\:opacity-100 {
-      opacity: 1 !important;
-    }
-
-    /* 移动端卡片间距优化 */
-    .mobile-card-spacing {
-      margin-bottom: 0.75rem;
-    }
-
-    /* 移动端文字大小优化 */
-    .mobile-text-adjust {
-      font-size: 0.875rem;
-      line-height: 1.25rem;
-    }
-  }
-
   /* 触摸设备检测 */
   @media (hover: none) and (pointer: coarse) {
     .group:hover .opacity-0 {
@@ -316,45 +297,6 @@
   }
 
   /* 移动端滚动优化 */
-  @media (max-width: 1023px) {
-    body {
-      overflow-x: hidden; /* 只禁用水平滚动 */
-    }
-
-    /* 确保移动端可以正常滚动 */
-    .mobile-scroll {
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-    }
-
-    /* 移动端memos列表滚动优化 */
-    .mobile-memos-container {
-      max-height: calc(100vh - 160px); /* 减去顶部栏和编辑器高度 */
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE and Edge */
-    }
-
-    .mobile-memos-container::-webkit-scrollbar {
-      display: none; /* Chrome, Safari and Opera */
-    }
-  }
-
-  /* 桌面端滚动优化 */
-  @media (min-width: 1024px) {
-    .mobile-memos-container-disabled {
-      max-height: none !important;
-      overflow-y: auto !important;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE and Edge */
-    }
-
-    .mobile-memos-container-disabled::-webkit-scrollbar {
-      display: none; /* Chrome, Safari and Opera */
-    }
-  }
-
   /* 通用滚动条主题（浅色/深色自适应），用于滚动容器的观感统一 */
   .scrollbar-theme {
     scrollbar-width: thin; /* Firefox */
@@ -397,25 +339,6 @@
   .dark .scrollbar-theme::-webkit-scrollbar-thumb:hover {
     background-color: #64748b; /* slate-500 */
   }
-
-    /* 移动端侧栏动画 */
-    .mobile-sidebar-enter {
-      transform: translateX(-100%);
-    }
-
-    .mobile-sidebar-enter-active {
-      transform: translateX(0);
-      transition: transform 300ms ease-in-out;
-    }
-
-    .mobile-sidebar-exit {
-      transform: translateX(0);
-    }
-
-    .mobile-sidebar-exit-active {
-      transform: translateX(-100%);
-      transition: transform 300ms ease-in-out;
-    }
 
     /* 移动端侧栏滚动条样式 */
     .scrollbar-thin {

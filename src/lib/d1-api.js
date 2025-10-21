@@ -64,42 +64,6 @@ export class D1ApiClient {
     }
   }
 
-  // 获取公开数据（游客模式使用）
-  static async getPublicData() {
-    try {
-      const baseUrl = await this.getBaseUrl();
-
-      // 设置请求头
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-
-      // 获取公开memos
-      const memosResponse = await fetch(`${baseUrl}/api/memos?public_only=true`, {
-        method: 'GET',
-        headers,
-      });
-
-      const memosResult = await memosResponse.json();
-
-      if (!memosResult.success) {
-        throw new Error(memosResult.message || '获取公开数据失败');
-      }
-
-      return {
-        success: true,
-        data: {
-          memos: memosResult.data || [],
-          settings: null // 游客模式不需要设置
-        },
-        message: '获取公开数据成功'
-      };
-    } catch (error) {
-      console.error('获取公开数据失败:', error);
-      return { success: false, message: error.message };
-    }
-  }
-
   // 从D1恢复用户数据
   static async restoreUserData() {
     try {
@@ -168,7 +132,6 @@ export class D1ApiClient {
           tags: memo.tags || [],
           backlinks: Array.isArray(memo.backlinks) ? memo.backlinks : [],
           audio_clips: Array.isArray(memo.audioClips) ? memo.audioClips : [],
-          is_public: memo.is_public ? 1 : 0, // 🔧 添加is_public字段
           created_at: createdAt,
           updated_at: updatedAt
         }),

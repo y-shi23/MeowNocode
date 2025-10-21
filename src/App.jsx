@@ -31,15 +31,25 @@ const AppContent = () => {
     );
   }
 
-  // 🔧 修改逻辑：不管是否需要认证，都显示主应用
-  // 未认证时显示公开博客模式，已认证时显示完整功能
+  // 未登录且需要认证时，除登录页外统一展示登录
   return (
     <>
       <HashRouter>
         <Routes>
           {navItems.map(({ to, page }) => (
-            <Route key={to} path={to} element={page} />
+            <Route
+              key={to}
+              path={to}
+              element={
+                requiresAuth && !isAuthenticated && to !== '/login'
+                  ? <Login />
+                  : page
+              }
+            />
           ))}
+          {requiresAuth && !isAuthenticated && (
+            <Route path="*" element={<Login />} />
+          )}
         </Routes>
       </HashRouter>
       <LoginDialog />
@@ -65,4 +75,3 @@ const App = () => (
 );
 
 export default App;
-
