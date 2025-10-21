@@ -13,6 +13,7 @@ import MemoPreviewDialog from '@/components/MemoPreviewDialog';
 import MusicModal from '@/components/MusicModal';
 import MiniMusicPlayer from '@/components/MiniMusicPlayer';
 import MusicSearchCard from '@/components/MusicSearchCard';
+import TitleBar from '@/components/TitleBar';
 import { useSettings } from '@/context/SettingsContext';
 import { addDeletedMemoTombstone } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -1260,7 +1261,7 @@ import { toast } from 'sonner';
 
   return (
     <div
-      className="h-full min-h-0 bg-gray-50 dark:bg-gray-900 flex flex-col lg:flex-row overflow-hidden relative"
+      className="h-full min-h-0 bg-gray-50 dark:bg-gray-900 flex flex-col overflow-hidden relative rounded-lg"
     >
       {/* 背景图片层 - 亮度滤镜只应用于此层 */}
   {effectiveBgUrl && (
@@ -1278,6 +1279,9 @@ import { toast } from 'sonner';
         />
       )}
 
+      {/* 自定义标题栏 */}
+      <TitleBar />
+      
       {/* 主内容区域 */}
       <div className="relative z-10 flex-1 w-full flex flex-col lg:flex-row min-h-0">
         

@@ -31,7 +31,10 @@
         "setAlwaysOnTop": true,
         "setDecorations": true,
         "startDragging": true,
-        "setPosition": true
+        "setPosition": true,
+        "minimize": true,
+        "maximize": true,
+        "unmaximize": true
       }
     },
     "windows": [
@@ -42,7 +45,9 @@
         "minWidth": 1024,
         "minHeight": 640,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": false
       }
     ]
   }
