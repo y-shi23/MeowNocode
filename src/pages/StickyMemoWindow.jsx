@@ -175,18 +175,8 @@ const StickyMemoWindow = () => {
       style={{ width: `${STICKY_WINDOW_WIDTH}px`, height: `${STICKY_WINDOW_HEIGHT}px` }}
       onMouseDown={handleMouseDown}
     >
-      <div className="flex h-full w-full flex-col rounded-3xl border border-slate-200/70 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 shadow-[0_18px_45px_-20px_rgba(15,23,42,0.45)] backdrop-blur-sm overflow-hidden">
+      <div className="flex h-full w-full flex-col rounded-lg border border-slate-200/70 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 shadow-[0_18px_45px_-20px_rgba(15,23,42,0.45)] backdrop-blur-sm overflow-hidden">
         <header className="flex items-start justify-between px-5 pt-5 pb-3 select-none" data-tauri-drag-region>
-          <div>
-            <div className="text-xs uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
-              Sticky Memo
-            </div>
-            {createdLabel && memo && (
-              <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                创建于 {createdLabel}
-              </div>
-            )}
-          </div>
           {isTauri() && (
             <div className="flex items-center gap-2">
               <button
@@ -251,9 +241,8 @@ const StickyMemoWindow = () => {
           )}
         </main>
 
-        <footer className="flex items-center justify-between px-5 pb-4 text-[11px] text-slate-400 dark:text-slate-500 select-none" data-tauri-drag-region="false">
+        <footer className="flex items-center justify-start px-5 pb-4 text-[11px] text-slate-400 dark:text-slate-500 select-none" data-tauri-drag-region="false">
           <span>{memo ? `更新于 ${updatedLabel || '未知'}` : '便签窗口'}</span>
-          {memo ? <span>ID {String(memo.id)}</span> : null}
         </footer>
       </div>
     </div>
