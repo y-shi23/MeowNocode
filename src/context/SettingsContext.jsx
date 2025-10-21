@@ -1,6 +1,7 @@
 ﻿import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getDeletedMemoTombstones, setDeletedMemoTombstones } from '@/lib/utils';
 import largeFileStorage from '@/lib/largeFileStorage';
+import s3StorageService from '@/lib/s3Storage';
 import { toast } from 'sonner';
 
 const SettingsContext = createContext();
@@ -70,14 +71,28 @@ export function SettingsProvider({ children }) {
   const ensureS3Client = React.useCallback(() => {
     if (!s3Config?.enabled) return null;
     try {
-      const svc = require('@/lib/s3Storage').default;
-      if (!svc.initialized) {
-        svc.init(s3Config);
+      const normalizedConfig = {
+        endpoint: s3Config.endpoint,
+        accessKeyId: s3Config.accessKeyId,
+        secretAccessKey: s3Config.secretAccessKey,
+        bucket: s3Config.bucket,
+        region: s3Config.region || 'auto',
+        publicUrl: s3Config.publicUrl || s3Config.endpoint,
+        provider: s3Config.provider || 'r2'
+      };
+
+      const needsInit = !s3StorageService.initialized
+        || ['endpoint', 'accessKeyId', 'secretAccessKey', 'bucket', 'region', 'publicUrl', 'provider']
+          .some((key) => s3StorageService.config?.[key] !== normalizedConfig[key]);
+
+      if (needsInit) {
+        s3StorageService.init(s3Config);
       }
-      if (!svc.isConfigured()) {
+
+      if (!s3StorageService.isConfigured()) {
         return null;
       }
-      return svc;
+      return s3StorageService;
     } catch (error) {
       console.warn('S3服务不可用:', error);
       return null;
@@ -358,8 +373,7 @@ export function SettingsProvider({ children }) {
   // 若配置已启用，则初始化 S3 客户端
         try {
           if (parsedConfig && parsedConfig.enabled) {
-            const svc = require('@/lib/s3Storage').default;
-            svc.init(parsedConfig);
+            s3StorageService.init(parsedConfig);
           }
         } catch (e) {
           console.warn('Init S3 on load failed:', e);
@@ -521,9 +535,8 @@ export function SettingsProvider({ children }) {
     dispatchDataChanged({ part: 's3' });
   // 若已启用则保证运行时已初始化
     try {
-      const svc = require('@/lib/s3Storage').default;
       if (s3Config && s3Config.enabled) {
-        svc.init(s3Config);
+        s3StorageService.init(s3Config);
       }
     } catch (e) {
   // 仅写日志，不打断设置保存
