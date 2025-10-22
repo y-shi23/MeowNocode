@@ -20,10 +20,29 @@ export default function MusicModal({
   const [volume, setVolume] = React.useState(0.8);
   const [showVol, setShowVol] = React.useState(false);
   const [showPlaylist, setShowPlaylist] = React.useState(false);
+  const [layoutMode, setLayoutMode] = React.useState(() => {
+    if (typeof window === 'undefined') return 'full';
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    if (width <= 420 || height <= 520) return 'disc';
+    if (width <= 640 || height <= 620) return 'info';
+    if (width <= 900 || height <= 760) return 'controls';
+    return 'full';
+  });
   const volRef = React.useRef(null);
   const volTrackRef = React.useRef(null);
   const isDraggingVolRef = React.useRef(false);
   const lyricsContainerRef = React.useRef(null);
+
+  const computeLayoutMode = React.useCallback(() => {
+    if (typeof window === 'undefined') return 'full';
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    if (width <= 420 || height <= 520) return 'disc';
+    if (width <= 640 || height <= 620) return 'info';
+    if (width <= 900 || height <= 760) return 'controls';
+    return 'full';
+  }, []);
 
   const { 
     getCurrentSong, 
@@ -98,6 +117,19 @@ export default function MusicModal({
     try { window.dispatchEvent(new CustomEvent('music:sync-request')); } catch {}
   }, [isOpen, currentSong?.title, currentSong?.lyrics, parseLrc]);
 
+  React.useEffect(() => {
+    const update = () => setLayoutMode(computeLayoutMode());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [computeLayoutMode]);
+
+  React.useEffect(() => {
+    if ((layoutMode === 'disc' || layoutMode === 'info') && showPlaylist) {
+      setShowPlaylist(false);
+    }
+  }, [layoutMode, showPlaylist]);
+
   // 标记全屏音乐打开，供页面阻止侧栏唤出
   React.useEffect(() => {
     try {
@@ -170,15 +202,6 @@ export default function MusicModal({
 
   const handleLoadedMetadata = () => {
     // 源在迷你播放器，这里不直接读
-  };
-
-  const handleProgressClick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percentage = clickX / rect.width;
-    const time = percentage * duration;
-    setCurrentTime(time);
-    try { window.dispatchEvent(new CustomEvent('music:seek', { detail: { time } })); } catch {}
   };
 
   const formatTime = (time) => {
@@ -289,10 +312,25 @@ export default function MusicModal({
 
   if (!isOpen || !currentSong) return null;
 
-  const discSize = 'clamp(11rem, 50vw, 18.75rem)';
-  const innerDiscSize = 'clamp(9rem, 44vw, 16.25rem)';
-  const coverSize = 'clamp(7.5rem, 38vw, 14rem)';
-  const centerButtonSize = 'clamp(2.75rem, 12vw, 3.75rem)';
+  const discSizeMap = {
+    disc: 'clamp(10.5rem, 58vw, 18rem)',
+    info: 'clamp(10rem, 54vw, 17.5rem)',
+    controls: 'clamp(9.8rem, 50vw, 17rem)',
+    full: 'clamp(9.2rem, 46vw, 16rem)',
+  };
+  const ringThicknessMap = {
+    disc: { outer: 'clamp(0.75rem, 3.5vw, 1.2rem)', inner: 'clamp(0.55rem, 2.8vw, 0.9rem)' },
+    info: { outer: 'clamp(0.7rem, 3.2vw, 1.1rem)', inner: 'clamp(0.5rem, 2.5vw, 0.85rem)' },
+    controls: { outer: 'clamp(0.65rem, 3vw, 1.05rem)', inner: 'clamp(0.45rem, 2.2vw, 0.8rem)' },
+    full: { outer: 'clamp(0.6rem, 2.8vw, 1rem)', inner: 'clamp(0.4rem, 2vw, 0.75rem)' },
+  };
+  const discSize = discSizeMap[layoutMode] || discSizeMap.full;
+  const { outer: outerRingThickness, inner: innerRingThickness } = ringThicknessMap[layoutMode] || ringThicknessMap.full;
+  const centerButtonSize = 'clamp(2.5rem, 10vw, 3.4rem)';
+  const showSongInfo = layoutMode !== 'disc';
+  const showControlRow = layoutMode === 'controls' || layoutMode === 'full';
+  const showLyricsSection = layoutMode === 'full' && showLyrics && lyrics.length > 0;
+  const canToggleLyrics = layoutMode === 'full';
 
   return (
     <>
@@ -317,7 +355,7 @@ export default function MusicModal({
       )}
       <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out font-[family-name:var(--font-geist-sans)] px-4 sm:px-6" onClick={onClose}>
         <div
-          className="bg-[#282A2A] rounded-2xl w-full max-w-2xl mx-auto px-5 py-6 sm:px-8 sm:py-8 transform transition-all duration-300 ease-in-out relative flex flex-col items-center gap-5 sm:gap-6 pt-12 sm:pt-16"
+          className="bg-[#282A2A] rounded-2xl w-full max-w-2xl mx-auto px-5 py-6 sm:px-8 sm:py-8 transform transition-all duration-300 ease-in-out relative flex flex-col items-center gap-4 sm:gap-5 pt-10 sm:pt-14 pb-4"
           style={{ animation: isOpen ? 'modalSlideIn 0.3s ease-out' : 'modalSlideOut 0.3s ease-in', width: 'min(92vw, 36rem)', maxHeight: 'min(90vh, 42rem)' }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -326,18 +364,18 @@ export default function MusicModal({
           </button>
 
           <div
-            className="text-center bg-[#3F4142] rounded-full relative flex items-center justify-center shadow-lg mx-auto"
-            style={{ width: discSize, height: discSize }}
+            className="text-center bg-[#3C3E3F] rounded-full relative flex items-center justify-center shadow-lg mx-auto box-border"
+            style={{ width: discSize, height: discSize, padding: outerRingThickness }}
           >
             <div
-              className="bg-[#030303] rounded-full overflow-hidden shadow-lg flex items-center justify-center relative"
-              style={{ width: innerDiscSize, height: innerDiscSize }}
+              className="bg-[#030303] rounded-full overflow-hidden shadow-lg flex items-center justify-center relative w-full h-full box-border"
+              style={{ padding: innerRingThickness }}
             >
               <img
                 src={currentSong.coverUrl || '/images/default-music-cover.svg'}
                 alt={currentSong.title}
-                className={`object-cover rounded-full border-[3px] border-white transition-transform duration-1000 ${isPlaying ? 'animate-spin' : ''}`}
-                style={{ animationDuration: '10s', width: coverSize, height: coverSize }}
+                className={`object-cover rounded-full border-[3px] border-white transition-transform duration-1000 w-full h-full ${isPlaying ? 'animate-spin' : ''}`}
+                style={{ animationDuration: '10s' }}
               />
 
               {/* 唱片中央播放/暂停按钮 */}
@@ -347,7 +385,7 @@ export default function MusicModal({
                   style={{ width: centerButtonSize, height: centerButtonSize }}
                   onClick={togglePlay}
                 >
-                  <SvgIcon name="play" width="100%" height="100%" color="#fff" />
+                  <SvgIcon name="play" color="#fff" className="w-full h-full" />
                 </div>
               )}
 
@@ -357,19 +395,21 @@ export default function MusicModal({
                   style={{ width: centerButtonSize, height: centerButtonSize }}
                   onClick={togglePlay}
                 >
-                  <SvgIcon name="pause" width="100%" height="100%" color="#fff" />
+                  <SvgIcon name="pause" color="#fff" className="w-full h-full" />
                 </div>
               )}
             </div>
           </div>
 
-          <div className="text-lg sm:text-xl text-white mt-2 text-center px-2 break-words">{currentSong.title}</div>
-          <p className="text-sm sm:text-base text-gray-300 text-center px-2">{currentSong.artist}</p>
+          {showSongInfo && (
+            <>
+              <div className="text-lg sm:text-xl text-white mt-2 text-center px-2 break-words">{currentSong.title}</div>
+              <p className="text-sm sm:text-base text-gray-300 text-center px-2">{currentSong.artist}</p>
+            </>
+          )}
 
-          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-            <span className="text-white text-xs sm:text-sm text-center sm:text-left">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
+          {showControlRow && (
+          <div className="w-full flex flex-col items-center gap-2 mb-2">
             <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5">
               {/* 上一首按钮 */}
               <button
@@ -412,12 +452,14 @@ export default function MusicModal({
               )}
 
               {/* 歌词按钮 */}
-              <span 
-                className={`cursor-pointer text-white text-xs sm:text-sm ${showLyrics ? 'font-semibold' : 'font-normal'}`}
-                onClick={toggleLyrics}
-              >
-                词
-              </span>
+              {canToggleLyrics && (
+                <span 
+                  className={`cursor-pointer text-white text-xs sm:text-sm ${showLyrics ? 'font-semibold' : 'font-normal'}`}
+                  onClick={toggleLyrics}
+                >
+                  词
+                </span>
+              )}
 
               {/* 播放列表按钮 */}
               <button
@@ -474,15 +516,19 @@ export default function MusicModal({
                 )}
               </div>
             </div>
+            <span className="text-white text-xs sm:text-sm text-center leading-tight">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
           </div>
+          )}
 
           {/* 歌词（放入卡片内） */}
-          {lyrics.length > 0 && showLyrics && (
-            <div className="w-full my-4">
+          {showLyricsSection && (
+            <div className="w-full mt-2">
               <div
                 ref={lyricsContainerRef}
-                className="rounded-lg p-3 max-h-52 sm:max-h-64 overflow-y-auto scrollbar-hide"
-                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                className="rounded-lg px-3 py-2 overflow-y-auto scrollbar-hide"
+                style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', maxHeight: 'min(32vh, 13rem)' }}
               >
                 {(() => {
                   const len = lyrics.length;
@@ -496,7 +542,7 @@ export default function MusicModal({
                     return (
                       <div
                         key={realIndex}
-                        className={`py-2 px-2 transition-all duration-300 text-center ${isCurrentLyric ? 'text-white text-base sm:text-xl font-bold' : isPassedLyric ? 'text-gray-300 text-xs sm:text-sm' : 'text-gray-200 text-xs sm:text-sm'}`}
+                className={`py-1.5 px-2 transition-all duration-300 text-center ${isCurrentLyric ? 'text-white text-base sm:text-xl font-bold' : isPassedLyric ? 'text-gray-300 text-xs sm:text-sm' : 'text-gray-200 text-xs sm:text-sm'}`}
                         style={{ lineHeight: '1.6', whiteSpace: 'pre-line' }}
                       >
                         {lyric.artist && (<div className="text-[10px] sm:text-xs text-gray-400 mb-1">{lyric.artist}</div>)}
@@ -509,19 +555,6 @@ export default function MusicModal({
               </div>
             </div>
           )}
-
-          {/* 进度条（移动到歌词下方） */}
-          <div className="w-full mt-2">
-            <div className="w-full h-1.5 sm:h-2 bg-gray-600 rounded-full cursor-pointer relative" onClick={handleProgressClick}>
-              <div className="absolute inset-0 bg-gray-600 rounded-full"></div>
-              <div className="absolute top-0 left-0 h-full  bg-[#fff] rounded-full transition-all duration-100" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}></div>
-              <div className="absolute top-[50%] transform w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full shadow-lg cursor-pointer transition-all duration-100" style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, transform: 'translate(-50%, -50%)' }}></div>
-            </div>
-            <div className="flex justify-between text-xs sm:text-sm text-gray-300 mt-2">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
 
           {/* 无音频元素：音频源在迷你播放器 */}
         </div>
