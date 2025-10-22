@@ -289,6 +289,11 @@ export default function MusicModal({
 
   if (!isOpen || !currentSong) return null;
 
+  const discSize = 'clamp(11rem, 50vw, 18.75rem)';
+  const innerDiscSize = 'clamp(9rem, 44vw, 16.25rem)';
+  const coverSize = 'clamp(7.5rem, 38vw, 14rem)';
+  const centerButtonSize = 'clamp(2.75rem, 12vw, 3.75rem)';
+
   return (
     <>
       {enableDanmaku && (
@@ -310,48 +315,66 @@ export default function MusicModal({
           zIndex={45}
         />
       )}
-      <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] bg-opacity-75 flex flex-col items-center justify-center z-50 transition-opacity duration-300 ease-in-out font-[family-name:var(--font-geist-sans)]" onClick={onClose}>
-        <div className="bg-[#282A2A] rounded-lg p-8 max-w-md w-full mx-4 transform transition-all duration-300 ease-in-out relative flex flex-col items-center justify-center pt-[60px]" onClick={(e) => e.stopPropagation()} style={{ animation: isOpen ? 'modalSlideIn 0.3s ease-out' : 'modalSlideOut 0.3s ease-in' }}>
+      <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out font-[family-name:var(--font-geist-sans)] px-4 sm:px-6" onClick={onClose}>
+        <div
+          className="bg-[#282A2A] rounded-2xl w-full max-w-2xl mx-auto px-5 py-6 sm:px-8 sm:py-8 transform transition-all duration-300 ease-in-out relative flex flex-col items-center gap-5 sm:gap-6 pt-12 sm:pt-16"
+          style={{ animation: isOpen ? 'modalSlideIn 0.3s ease-out' : 'modalSlideOut 0.3s ease-in', width: 'min(92vw, 36rem)', maxHeight: 'min(90vh, 42rem)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <button onClick={onClose} className="cursor-pointer absolute top-4 right-4">
             <SvgIcon name="close" width={30} height={30} color="#333" />
           </button>
 
-          <div className="text-center bg-[#3F4142] w-[300px] h-[300px] rounded-[50%] relative flex items-center justify-center shadow-lg">
-            <div className="w-[270px] h-[270px] bg-[#030303] rounded-full overflow-hidden shadow-lg flex items-center justify-center relative">
-              <img 
-                src={currentSong.coverUrl || '/images/default-music-cover.svg'} 
-                alt={currentSong.title} 
-                width={200} 
-                height={200} 
-                className={`object-cover rounded-full border-3 border-[#fff] transition-transform duration-1000 ${isPlaying ? 'animate-spin' : ''}`} 
-                style={{ animationDuration: '10s' }} 
+          <div
+            className="text-center bg-[#3F4142] rounded-full relative flex items-center justify-center shadow-lg mx-auto"
+            style={{ width: discSize, height: discSize }}
+          >
+            <div
+              className="bg-[#030303] rounded-full overflow-hidden shadow-lg flex items-center justify-center relative"
+              style={{ width: innerDiscSize, height: innerDiscSize }}
+            >
+              <img
+                src={currentSong.coverUrl || '/images/default-music-cover.svg'}
+                alt={currentSong.title}
+                className={`object-cover rounded-full border-[3px] border-white transition-transform duration-1000 ${isPlaying ? 'animate-spin' : ''}`}
+                style={{ animationDuration: '10s', width: coverSize, height: coverSize }}
               />
 
               {/* 唱片中央播放/暂停按钮 */}
               {!isPlaying && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-[rgba(0,0,0,0.5)] w-[50px] h-[50px] rounded-full" onClick={togglePlay}>
-                  <SvgIcon name="play" width={50} height={50} color="#fff" />
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-[rgba(0,0,0,0.5)] rounded-full flex items-center justify-center"
+                  style={{ width: centerButtonSize, height: centerButtonSize }}
+                  onClick={togglePlay}
+                >
+                  <SvgIcon name="play" width="100%" height="100%" color="#fff" />
                 </div>
               )}
 
               {isPlaying && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-[rgba(0,0,0,0.5)] w-[50px] h-[50px] rounded-full" onClick={togglePlay}>
-                  <SvgIcon name="pause" width={50} height={50} color="#fff" />
+                <div
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-[rgba(0,0,0,0.5)] rounded-full flex items-center justify-center"
+                  style={{ width: centerButtonSize, height: centerButtonSize }}
+                  onClick={togglePlay}
+                >
+                  <SvgIcon name="pause" width="100%" height="100%" color="#fff" />
                 </div>
               )}
             </div>
           </div>
 
-          <div className="text-xl text-white mb-2 mt-6">{currentSong.title}</div>
-          <p className="text-gray-300 mb-6">{currentSong.artist}</p>
+          <div className="text-lg sm:text-xl text-white mt-2 text-center px-2 break-words">{currentSong.title}</div>
+          <p className="text-sm sm:text-base text-gray-300 text-center px-2">{currentSong.artist}</p>
 
-          <div className="flex gap-[20px] items-center mb-4">
-            <span className="text-white text-sm">{formatTime(currentTime)} / {formatTime(duration)}</span>
-            <div className="flex gap-[10px] items-center">
+          <div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <span className="text-white text-xs sm:text-sm text-center sm:text-left">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
+            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5">
               {/* 上一首按钮 */}
               <button
                 onClick={playPrevious}
-                className="cursor-pointer text-white hover:text-gray-300 transition-colors"
+                className="cursor-pointer text-white hover:text-gray-300 transition-colors disabled:opacity-40"
                 title="上一首"
                 disabled={playlist.length <= 1}
               >
@@ -390,7 +413,7 @@ export default function MusicModal({
 
               {/* 歌词按钮 */}
               <span 
-                className={`cursor-pointer text-white text-sm ${showLyrics ? 'font-bold' : 'font-normal'}`} 
+                className={`cursor-pointer text-white text-xs sm:text-sm ${showLyrics ? 'font-semibold' : 'font-normal'}`}
                 onClick={toggleLyrics}
               >
                 词
@@ -458,7 +481,7 @@ export default function MusicModal({
             <div className="w-full my-4">
               <div
                 ref={lyricsContainerRef}
-                className="rounded-lg p-3"
+                className="rounded-lg p-3 max-h-52 sm:max-h-64 overflow-y-auto scrollbar-hide"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
               >
                 {(() => {
@@ -473,11 +496,11 @@ export default function MusicModal({
                     return (
                       <div
                         key={realIndex}
-                        className={`py-2 px-2 transition-all duration-300 text-center ${isCurrentLyric ? 'text-white text-xl font-bold' : isPassedLyric ? 'text-gray-300 text-sm' : 'text-gray-200 text-sm'}`}
+                        className={`py-2 px-2 transition-all duration-300 text-center ${isCurrentLyric ? 'text-white text-base sm:text-xl font-bold' : isPassedLyric ? 'text-gray-300 text-xs sm:text-sm' : 'text-gray-200 text-xs sm:text-sm'}`}
                         style={{ lineHeight: '1.6', whiteSpace: 'pre-line' }}
                       >
-                        {lyric.artist && (<div className="text-xs text-gray-400 mb-1">{lyric.artist}</div>)}
-                        {lyric.section && (<div className="text-xs text-blue-300 mb-1 font-semibold">[{lyric.section}]</div>)}
+                        {lyric.artist && (<div className="text-[10px] sm:text-xs text-gray-400 mb-1">{lyric.artist}</div>)}
+                        {lyric.section && (<div className="text-[10px] sm:text-xs text-blue-300 mb-1 font-semibold">[{lyric.section}]</div>)}
                         <div>{lyric.text}</div>
                       </div>
                     );
@@ -489,12 +512,12 @@ export default function MusicModal({
 
           {/* 进度条（移动到歌词下方） */}
           <div className="w-full mt-2">
-            <div className="w-full h-2 bg-gray-600 rounded-full cursor-pointer relative" onClick={handleProgressClick}>
+            <div className="w-full h-1.5 sm:h-2 bg-gray-600 rounded-full cursor-pointer relative" onClick={handleProgressClick}>
               <div className="absolute inset-0 bg-gray-600 rounded-full"></div>
               <div className="absolute top-0 left-0 h-full  bg-[#fff] rounded-full transition-all duration-100" style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}></div>
-              <div className="absolute top-[50%] transform w-4 h-4 bg-white rounded-full shadow-lg cursor-pointer transition-all duration-100" style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, transform: 'translate(-50%, -50%)' }}></div>
+              <div className="absolute top-[50%] transform w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full shadow-lg cursor-pointer transition-all duration-100" style={{ left: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, transform: 'translate(-50%, -50%)' }}></div>
             </div>
-            <div className="flex justify-between text-sm text-gray-300 mt-2">
+            <div className="flex justify-between text-xs sm:text-sm text-gray-300 mt-2">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
