@@ -310,8 +310,6 @@ export default function MusicModal({
     };
   }, []);
 
-  if (!isOpen || !currentSong) return null;
-
   const discSizeMap = {
     disc: 'clamp(10.5rem, 58vw, 18rem)',
     info: 'clamp(10rem, 54vw, 17.5rem)',
@@ -331,6 +329,18 @@ export default function MusicModal({
   const showControlRow = layoutMode === 'controls' || layoutMode === 'full';
   const showLyricsSection = layoutMode === 'full' && showLyrics && lyrics.length > 0;
   const canToggleLyrics = layoutMode === 'full';
+
+  const handleBackdropClick = React.useCallback((event) => {
+    if (event.target !== event.currentTarget) return;
+    if (showPlaylist) {
+      event.stopPropagation();
+      setShowPlaylist(false);
+      return;
+    }
+    onClose();
+  }, [onClose, setShowPlaylist, showPlaylist]);
+
+  if (!isOpen || !currentSong) return null;
 
   return (
     <>
@@ -353,7 +363,10 @@ export default function MusicModal({
           zIndex={45}
         />
       )}
-      <div className="fixed inset-0 bg-[rgba(0,0,0,0.3)] bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out font-[family-name:var(--font-geist-sans)] px-4 sm:px-6" onClick={onClose}>
+      <div
+        className="fixed inset-0 bg-[rgba(0,0,0,0.3)] bg-opacity-75 flex items-center justify-center z-50 transition-opacity duration-300 ease-in-out font-[family-name:var(--font-geist-sans)] px-4 sm:px-6"
+        onClick={handleBackdropClick}
+      >
         <div
           className="bg-[#282A2A] rounded-2xl w-full max-w-2xl mx-auto px-5 py-6 sm:px-8 sm:py-8 transform transition-all duration-300 ease-in-out relative flex flex-col items-center gap-4 sm:gap-5 pt-10 sm:pt-14 pb-4"
           style={{ animation: isOpen ? 'modalSlideIn 0.3s ease-out' : 'modalSlideOut 0.3s ease-in', width: 'min(92vw, 36rem)', maxHeight: 'min(90vh, 42rem)' }}
