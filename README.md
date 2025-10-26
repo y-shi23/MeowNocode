@@ -10,6 +10,7 @@ Meow App 是一个简洁的笔记应用，支持本地存储和云端同步。�
 - AI对话
 
 ## 特别感谢
+- CNB cloud native build<https://cnb.cool/>
 - Meituan Nocode<https://nocode.cn>
 - 各种 AI Coding Application。欢迎 Pull request!
 
