@@ -2,6 +2,7 @@ main:
   push:
     - stages:
         - name: sync to github
+          imports: "https://cnb.cool/1oved/secrets/-/blob/main/sync-env.yml"
           image: tencentcom/git-sync
           settings:
             target_url: https://github.com/y-shi23/MeowNocode.git
