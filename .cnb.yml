@@ -1,0 +1,12 @@
+
+$:
+  vscode:
+    - docker:
+        image: docker.cnb.cool/1oved/dev-env-next:latest
+      services:
+        - vscode
+        - docker
+      # 开发环境启动后会执行的任务
+      stages:
+        - name: ls
+          script: ls -al
