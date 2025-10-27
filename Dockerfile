@@ -7,6 +7,7 @@ RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
 RUN npm install
+RUN npm install --package-lock-only && npm install
 
 COPY . .
 RUN npm run build
@@ -18,7 +19,7 @@ ENV NODE_ENV=production
 
 COPY package.json package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/build ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/d1-schema.sql ./d1-schema.sql
 
