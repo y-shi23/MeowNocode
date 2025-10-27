@@ -5,7 +5,7 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm install
 
 COPY . .
@@ -18,7 +18,7 @@ ENV NODE_ENV=production
 
 RUN apk add --no-cache su-exec
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./dist
 COPY --from=builder /app/server ./server
