@@ -1,4 +1,13 @@
-
+main:
+  push:
+    - stages:
+        - name: sync to github
+          image: tencentcom/git-sync
+          settings:
+            target_url: ${MEOW}
+            auth_type: https
+            username: ${GIT_USERNAME}
+            password: ${GIT_ACCESS_TOKEN}
 $:
   vscode:
     - docker:
