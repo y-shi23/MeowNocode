@@ -7,7 +7,6 @@ RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
 RUN npm install
-RUN npm install --package-lock-only && npm install
 
 COPY . .
 RUN npm run build
@@ -17,16 +16,20 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
+RUN apk add --no-cache su-exec
+
 COPY package.json package-lock.json ./
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/d1-schema.sql ./d1-schema.sql
+COPY docker-entrypoint.sh /entrypoint.sh
+
+RUN chmod +x /entrypoint.sh
 
 RUN npm prune --omit=dev
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
 
 ENV PORT=3000
 ENV SQLITE_DB_PATH=/data/meownocode.db
@@ -34,4 +37,5 @@ ENV SQLITE_DB_PATH=/data/meownocode.db
 EXPOSE 3000
 VOLUME ["/data"]
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["node", "server/index.js"]
