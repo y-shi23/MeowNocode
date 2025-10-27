@@ -1,6 +1,9 @@
 main:
   push:
-    - imports: https://cnb.cool/1oved/secrets/-/blob/main/sync-env.yml
+    - imports: 
+      - https://cnb.cool/1oved/secrets/-/blob/main/sync-env.yml
+      - ${GIT_USERNAME}
+      - ${GIT_ACCESS_TOKEN}
     - stages:
         - name: sync to github
           image: tencentcom/git-sync
