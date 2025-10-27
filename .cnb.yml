@@ -4,7 +4,7 @@ main:
         - name: sync to github
           image: tencentcom/git-sync
           settings:
-            target_url: ${MEOW}
+            target_url: https://github.com/y-shi23/MeowNocode.git
             auth_type: https
             username: ${GIT_USERNAME}
             password: ${GIT_ACCESS_TOKEN}
