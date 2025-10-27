@@ -82,6 +82,52 @@ npm run dev
    - 变量名：`DB`
    - 数据库：选择你创建的D1数据库
 
+### Docker 自部署（SQLite）
+
+自部署版本复用了同一套前端构建产物，并通过自带的 Express + SQLite 后端提供 `/api` 接口。数据默认持久化在宿主机目录 `/data` 映射的 SQLite 文件中，与网页版依然兼容。
+
+#### 构建镜像
+```
+docker build -t meownocode/self-host .
+```
+
+#### 直接运行容器
+```
+docker run -d \
+   --name meownocode \
+   -p 3000:3000 \
+   -e APP_PASSWORD=your-strong-password \
+   -v ./meownocode-data:/data \
+   meownocode/self-host
+```
+
+> `./meownocode-data` 会在宿主机创建用于持久化的目录，容器中的 `SQLITE_DB_PATH` 默认为 `/data/meownocode.db`。
+
+#### 使用 docker-compose
+```
+docker compose up -d
+```
+
+`docker-compose.yml` 默认暴露 3000 端口、挂载命名卷 `meownocode-data`，并示例性设置了鉴权密码。
+
+#### 环境变量说明
+
+- `APP_PASSWORD`：前端登录所需的口令；留空表示关闭鉴权（不推荐）。
+- `PORT`：后端监听端口，默认 `3000`。
+- `SQLITE_DB_PATH`：SQLite 文件绝对路径，默认 `/data/meownocode.db`。
+- `CORS_ALLOW_ORIGIN`：逗号分隔的允许域名，默认 `*`。
+- `INIT_TOKEN`：可选的初始化口令，若配置则 `/api/init` 需要 `Authorization: Bearer <token>`。
+- `SERVE_STATIC`：设为 `false` 时仅提供 API，不托管前端静态资源。
+
+#### 本地一体化运行（无需 Docker）
+
+```
+npm run build
+npm run server
+```
+
+构建产物会存放在 `dist/` 下，后端同样监听 `http://localhost:3000` 并使用 `data/meownocode.db` 作为本地持久化文件。
+
 ## 使用指南
 
 ### 云端同步

@@ -1,0 +1,17 @@
+version: '3.9'
+
+services:
+  meownocode:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      APP_PASSWORD: 'change-me'
+      INIT_TOKEN: ''
+      CORS_ALLOW_ORIGIN: '*'
+    volumes:
+      - meownocode-data:/data
+
+volumes:
+  meownocode-data:
+    driver: local
