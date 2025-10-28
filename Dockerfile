@@ -5,6 +5,9 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
 
+ARG VITE_SELF_HOSTED=true
+ENV VITE_SELF_HOSTED=$VITE_SELF_HOSTED
+
 COPY package*.json ./
 RUN npm install
 
@@ -14,7 +17,9 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
+ARG VITE_SELF_HOSTED=true
 ENV NODE_ENV=production
+ENV VITE_SELF_HOSTED=$VITE_SELF_HOSTED
 
 RUN apk add --no-cache su-exec
 
