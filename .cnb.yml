@@ -10,6 +10,8 @@ main:
             username: ${GIT_USERNAME}
             password: ${GIT_ACCESS_TOKEN}
 
+docker:
+  push:
     - services:
         - docker
       stages:
