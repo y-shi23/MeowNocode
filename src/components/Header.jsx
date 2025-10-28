@@ -94,10 +94,10 @@ const Header = ({
                 }
               }
             }}
-            className="pl-10 pr-20"
+            className="pl-10 pr-3 md:pr-20"
           />
-          {/* Ctrl+K快捷键提示 */}
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          {/* Ctrl+K快捷键提示 - 仅在桌面端显示 */}
+          <div className="hidden md:flex absolute inset-y-0 right-0 items-center pr-3 pointer-events-none">
             <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">Ctrl</kbd>
             <span className="mx-1 text-xs">+</span>
             <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">K</kbd>
