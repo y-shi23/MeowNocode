@@ -7,6 +7,7 @@ import largeFileStorage from '@/lib/largeFileStorage';
 import { toast } from 'sonner';
 
 const SettingsContext = createContext();
+const isSelfHosted = String(import.meta.env.VITE_SELF_HOSTED || '').toLowerCase() === 'true';
 
 export function useSettings() {
   return useContext(SettingsContext);
@@ -31,7 +32,7 @@ export function SettingsProvider({ children }) {
   const [avatarConfig, setAvatarConfig] = useState({
     imageUrl: '' // 用户自定义头像URL
   });
-  const [cloudSyncEnabled, setCloudSyncEnabled] = useState(false);
+  const [cloudSyncEnabled, setCloudSyncEnabled] = useState(() => isSelfHosted);
   const [aiConfig, setAiConfig] = useState({
     baseUrl: '',
     apiKey: '',
@@ -483,16 +484,21 @@ export function SettingsProvider({ children }) {
     }
 
   // 从 localStorage 加载云同步设置
-    const savedCloudSyncEnabled = localStorage.getItem('cloudSyncEnabled');
-    if (savedCloudSyncEnabled) {
-      try {
-        setCloudSyncEnabled(JSON.parse(savedCloudSyncEnabled));
-      } catch (error) {
-        console.warn('Failed to parse cloud sync config:', error);
+    if (isSelfHosted) {
+      setCloudSyncEnabled(true);
+      localStorage.setItem('cloudSyncEnabled', 'true');
+    } else {
+      const savedCloudSyncEnabled = localStorage.getItem('cloudSyncEnabled');
+      if (savedCloudSyncEnabled) {
+        try {
+          setCloudSyncEnabled(JSON.parse(savedCloudSyncEnabled));
+        } catch (error) {
+          console.warn('Failed to parse cloud sync config:', error);
+        }
       }
     }
 
-  }, []);
+  }, [isSelfHosted]);
 
   // 从 localStorage 加载 S3 配置
   useEffect(() => {
@@ -635,8 +641,12 @@ export function SettingsProvider({ children }) {
 
   useEffect(() => {
   // 保存云同步设置
+    if (isSelfHosted) {
+      localStorage.setItem('cloudSyncEnabled', 'true');
+      return;
+    }
     localStorage.setItem('cloudSyncEnabled', JSON.stringify(cloudSyncEnabled));
-  }, [cloudSyncEnabled]);
+  }, [cloudSyncEnabled, isSelfHosted]);
 
   useEffect(() => {
   // 保存 AI 配置
@@ -820,6 +830,10 @@ export function SettingsProvider({ children }) {
   };
 
   const updateCloudSyncEnabled = (enabled) => {
+    if (isSelfHosted) {
+      setCloudSyncEnabled(true);
+      return;
+    }
     setCloudSyncEnabled(enabled);
   };
 
@@ -936,6 +950,7 @@ export function SettingsProvider({ children }) {
 
   return (
     <SettingsContext.Provider value={{
+      isSelfHosted,
       hitokotoConfig,
       updateHitokotoConfig,
       fontConfig,

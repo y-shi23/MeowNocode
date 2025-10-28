@@ -27,8 +27,9 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
     updateBackgroundConfig = () => {},
     avatarConfig = { imageUrl: '' },
     updateAvatarConfig = () => {},
-    cloudSyncEnabled = false,
-    updateCloudSyncEnabled = () => {},
+  cloudSyncEnabled = false,
+  updateCloudSyncEnabled = () => {},
+  isSelfHosted = false,
     manualSync = async () => ({ success: false, message: 'unavailable' }),
     aiConfig = { enabled: false, baseUrl: '', model: '', apiKey: '' },
     updateAiConfig = () => {},
@@ -1438,8 +1439,9 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
           {activeTab === 'data' && (
             <div className="space-y-6">
               {/* 云端同步设置 */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+              {!isSelfHosted && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium flex items-center">
                     <Cloud className="h-4 w-4 mr-2" />
                     云端数据同步
@@ -1459,9 +1461,9 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
                       }`}
                     />
                   </button>
-                </div>
+                  </div>
 
-                {cloudSyncEnabled && (
+                  {cloudSyncEnabled && (
                   <>
                     {/* 云同步配置 */}
                     <div className="space-y-3">
@@ -1505,7 +1507,8 @@ const SettingsCard = ({ isOpen, onClose, onOpenTutorial }) => {
                     </div>
                   </>
                 )}
-              </div>
+                </div>
+              )}
 
               {/* S3存储配置 */}
               <div className="space-y-4">
