@@ -76,12 +76,9 @@ const Header = ({
         )}
 
         <div className="relative w-48 sm:w-64 md:w-80">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
           <Input
             ref={searchInputRef}
-            type="text"
+            type="search"
             placeholder="搜索想法/音樂..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -92,12 +89,31 @@ const Header = ({
                   // 仅触发音乐搜索卡片展示，不改变现有过滤逻辑
                   onOpenMusicSearch && onOpenMusicSearch(q);
                 }
+                // 移动端：回车后收起键盘
+                e.target.blur();
               }
             }}
-            className="pl-10 pr-20"
+            className="pr-10 md:pr-20"
           />
-          {/* Ctrl+K快捷键提示 */}
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+          
+          {/* 搜索按钮 - 移动端显示，点击触发音乐搜索 */}
+          {searchQuery && (
+            <button
+              onClick={() => {
+                const q = (searchQuery || '').trim();
+                if (q) {
+                  onOpenMusicSearch && onOpenMusicSearch(q);
+                }
+              }}
+              className="md:hidden absolute inset-y-0 right-0 flex items-center pr-3 text-blue-500 hover:text-blue-600"
+              aria-label="搜索音乐"
+            >
+              <Search className="h-4 w-4" />
+            </button>
+          )}
+          
+          {/* Ctrl+K快捷键提示 - 仅在桌面端显示 */}
+          <div className="hidden md:flex absolute inset-y-0 right-0 items-center pr-3 pointer-events-none">
             <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">Ctrl</kbd>
             <span className="mx-1 text-xs">+</span>
             <kbd className="px-1 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 rounded">K</kbd>
