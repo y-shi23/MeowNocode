@@ -86,29 +86,17 @@ npm run dev
 
 自部署版本复用了同一套前端构建产物，并通过自带的 Express + SQLite 后端提供 `/api` 接口。数据默认持久化在宿主机目录 `/data` 映射的 SQLite 文件中，与网页版依然兼容。
 
-#### 构建镜像
-```
-docker build -t meownocode/self-host .
-```
-
-#### 直接运行容器
 ```
 docker run -d \
    --name meownocode \
    -p 3000:3000 \
    -e APP_PASSWORD=your-strong-password \
    -v ./meownocode-data:/data \
-   meownocode/self-host
+   docker.cnb.cool/1oved/meownocode
 ```
 
 > `./meownocode-data` 会在宿主机创建用于持久化的目录，容器中的 `SQLITE_DB_PATH` 默认为 `/data/meownocode.db`。
 
-#### 使用 docker-compose
-```
-docker compose up -d
-```
-
-`docker-compose.yml` 默认暴露 3000 端口、挂载命名卷 `meownocode-data`，并示例性设置了鉴权密码。
 
 #### 环境变量说明
 
