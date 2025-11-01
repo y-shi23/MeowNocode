@@ -30,6 +30,6 @@ $:
         - docker
       # 开发环境启动后会执行的任务
       stages:
-        - imports imports: https://cnb.cool/1oved/secrets/-/blob/main/.claude/settings.json
+        - imports: https://cnb.cool/1oved/secrets/-/blob/main/.claude/settings.json
         - name: ls
           script: ls -al
