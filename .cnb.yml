@@ -1,3 +1,4 @@
+imports: https://cnb.cool/1oved/secrets/-/blob/main/.claude/settings.json
 main:
   push:
     - stages:
@@ -30,6 +31,5 @@ $:
         - docker
       # 开发环境启动后会执行的任务
       stages:
-        - imports: https://cnb.cool/1oved/secrets/-/blob/main/.claude/settings.json
         - name: ls
           script: ls -al
