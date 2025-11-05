@@ -1,3 +1,4 @@
+imports: https://cnb.cool/1oved/secrets/-/blob/main/.claude/settings.json
 main:
   push:
     - stages:
