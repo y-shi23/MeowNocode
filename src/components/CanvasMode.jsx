@@ -1048,13 +1048,15 @@ const CanvasMode = ({
           className="absolute inset-0 origin-top-left"
           style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: '0 0' }}
         >
-          {/* 网格背景随变换缩放 - 填充容器 */}
+          {/* 无限网格背景 - 根据缩放比例动态调整网格大小 */}
       <div
             className="absolute inset-0"
             style={{
               backgroundImage: `linear-gradient(rgba(107,114,128,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(107,114,128,0.08) 1px, transparent 1px)`,
-              backgroundSize: '20px 20px',
-        backgroundPosition: '0 0, 0 0',
+              // 网格大小随缩放比例调整，保持视觉上20px的间距
+              backgroundSize: `${20 / scale}px ${20 / scale}px`,
+              // 网格位置根据平移偏移量调整，实现无限滚动效果
+              backgroundPosition: `${-translate.x / scale}px ${-translate.y / scale}px, ${-translate.x / scale}px ${-translate.y / scale}px`,
         pointerEvents: 'none'
             }}
           />

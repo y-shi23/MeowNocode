@@ -5,6 +5,7 @@ const CanvasEditor = ({ onAddMemo, canvasSize, scale = 1, translate = { x: 0, y:
   const [content, setContent] = useState('');
   const [inputHeight, setInputHeight] = useState(40);
   const textareaRef = useRef(null);
+  const containerRef = useRef(null);
 
   // 自动调整高度
   useEffect(() => {
@@ -33,6 +34,28 @@ const CanvasEditor = ({ onAddMemo, canvasSize, scale = 1, translate = { x: 0, y:
       const measured = textarea.offsetHeight || 40;
       setInputHeight(measured);
     }
+  }, []);
+
+  // 点击外部区域时取消输入框聚焦
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      const container = containerRef.current;
+      const textarea = textareaRef.current;
+
+      if (container && textarea &&
+          !container.contains(event.target) &&
+          document.activeElement === textarea) {
+        textarea.blur();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const handleSubmit = () => {
@@ -68,7 +91,7 @@ const CanvasEditor = ({ onAddMemo, canvasSize, scale = 1, translate = { x: 0, y:
   return (
   <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 canvas-ui" style={{ pointerEvents: 'auto' }}>
       {/* 去掉外层矩形框，仅保留输入与按钮本身样式 */}
-    <div className="flex items-end gap-2">
+    <div ref={containerRef} className="flex items-end gap-2">
         <textarea
           ref={textareaRef}
           value={content}
