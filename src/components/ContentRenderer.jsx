@@ -38,7 +38,7 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
       
       // 添加标签
       const tagContent = match[1]; // #标签内容
-      const tagName = tagContent.substring(1); // 去掉#�?
+      const tagName = tagContent.substring(1); // 去掉#�?
       parts.push({
         type: 'tag',
         content: tagContent,
@@ -59,29 +59,35 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
     return parts;
   };
 
-  // 渲染markdown文本（不包含标签�?
+  // 渲染markdown文本（不包含标签�?
   const renderMarkdownText = (text) => {
-    // 处理换行�?
+    // 处理换行�?
     let processedText = text.replace(/\n/g, '  \n');
-    
+
+    // 保留行首的空格 - 直接使用unicode非断行空格
+    processedText = processedText.replace(/^( +)/gm, (match, spaces) => {
+      // 将行首空格替换为unicode非断行空格
+      return spaces.split('').map(() => '\u00A0').join('');
+    });
+
     // 转换标题语法
     processedText = processedText.replace(/(?:^|\s)#([^\s#][^\n]*)/g, (match, p1) => {
       // 检查是否是标签
       const isTag = /^[\u4e00-\u9fa5a-zA-Z0-9_\/]+$/.test(p1);
-      
+
       if (isTag) {
         return match; // 保留标签不变
       }
-      
+
       // 否则替换为markdown标题格式
       return `${match[0] === ' ' ? ' ' : ''}# ${p1}`;
     });
-    
+
     return processedText;
   };
 
-  // 解析并按自定�?spoiler 语法分割文本
-  // 语法�?
+  // 解析并按自定�?spoiler 语法分割文本
+  // 语法�?
   // {% spoiler 文本 %}
   // {% spoiler style:box 文本 %}
   // {% spoiler style:box color:red 文本 %}
@@ -96,13 +102,13 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
       if (before) result.push({ kind: 'text', value: before });
 
       const inner = (m[1] || '').trim();
-      // 解析参数与内�?
+      // 解析参数与内�?
       let styleType = 'blur';
       let color;
       let content = inner;
 
-      // 尝试提取前部�?key:value 选项（顺序不限），直到遇到第一个非 key:value 开头的 token
-      // 用简单扫描避免把内容里的冒号误判：仅接受 style: �?color: 两种 key
+      // 尝试提取前部�?key:value 选项（顺序不限），直到遇到第一个非 key:value 开头的 token
+      // 用简单扫描避免把内容里的冒号误判：仅接受 style: �?color: 两种 key
       const tokens = inner.split(/\s+/);
       let consumed = 0;
       for (let i = 0; i < tokens.length; i++) {
@@ -118,7 +124,7 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
           consumed = i + 1;
           continue;
         }
-        // 第一个非选项，剩余全部作为内�?
+        // 第一个非选项，剩余全部作为内�?
         break;
       }
       if (consumed > 0 && consumed < tokens.length) {
@@ -136,7 +142,7 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
     return result;
   };
 
-  // 解析并按自定义原�?HTML 片段分割文本
+  // 解析并按自定义原�?HTML 片段分割文本
   // 语法：```__html\n ... 任意 HTML ... \n```
   const splitByRawHtml = (text) => {
     const result = [];
@@ -197,13 +203,13 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
             </span>
           );
         } else {
-          // 渲染文本部分：支�?__html 原样 HTML + spoiler + markdown
+          // 渲染文本部分：支�?__html 原样 HTML + spoiler + markdown
           const rawSegments = splitByRawHtml(part.content);
           return (
             <>
               {rawSegments.map((rawSeg, rawIdx) => {
                 if (rawSeg.kind === 'rawhtml') {
-                  // 直接渲染原样 HTML（来�?```__html ... ``` 块）
+                  // 直接渲染原样 HTML（来�?```__html ... ``` 块）
                   return (
                     <div key={`${index}-raw-${rawIdx}`} dangerouslySetInnerHTML={{ __html: rawSeg.value }} />
                   );
@@ -263,7 +269,7 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
                         h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
                         h2: ({node, ...props}) => <h2 className="text-lg font-bold my-2" {...props} />,
                         h3: ({node, ...props}) => <h3 className="text-md font-bold my-2" {...props} />,
-                        p: ({node, ...props}) => <span className="whitespace-pre-wrap" {...props} />,
+                        p: ({node, ...props}) => <span className="whitespace-pre-wrap break-words" {...props} />,
                         ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2" {...props} />,
                         ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2" {...props} />,
                         li: ({node, ...props}) => <li className="my-1" {...props} />,
@@ -359,7 +365,7 @@ const ContentRenderer = ({ content, activeTag, onTagClick }) => {
                               h1: ({node, ...props}) => <h1 className="text-xl font-bold my-2" {...props} />,
                               h2: ({node, ...props}) => <h2 className="text-lg font-bold my-2" {...props} />,
                               h3: ({node, ...props}) => <h3 className="text-md font-bold my-2" {...props} />,
-                              p: ({node, ...props}) => <span className="whitespace-pre-wrap" {...props} />,
+                              p: ({node, ...props}) => <span className="whitespace-pre-wrap break-words" {...props} />,
                               ul: ({node, ...props}) => <ul className="list-disc pl-5 my-2" {...props} />,
                               ol: ({node, ...props}) => <ol className="list-decimal pl-5 my-2" {...props} />,
                               li: ({node, ...props}) => <li className="my-1" {...props} />,

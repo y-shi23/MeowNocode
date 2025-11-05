@@ -49,3 +49,5 @@ $:
             echo ".claude/settings.json"
         - name: ls
           script: ls -al
+        - name: npm install
+          script: npm install
