@@ -127,7 +127,7 @@ const CanvasMode = ({
       }
       if (state && state.viewport) {
         const vp = state.viewport;
-        if (typeof vp.scale === 'number') setScale(clamp(vp.scale, 0.4, 2.5));
+        if (typeof vp.scale === 'number') setScale(clamp(vp.scale, 0.5, 2.5));
         if (vp.translate && typeof vp.translate.x === 'number' && typeof vp.translate.y === 'number') {
           setTranslate({ x: vp.translate.x, y: vp.translate.y });
         }
@@ -474,7 +474,7 @@ const CanvasMode = ({
       const mouseY = e.clientY - rect.top;
 
       const prevScale = scale;
-      const nextScale = clamp(prevScale * (e.deltaY < 0 ? 1.1 : 0.9), 0.4, 2.5);
+      const nextScale = clamp(prevScale * (e.deltaY < 0 ? 1.1 : 0.9), 0.5, 2.5);
 
       // 缩放围绕鼠标点，调整 translate 保持该点在屏幕位置不变
       const worldX = (mouseX - translate.x) / prevScale;
@@ -1048,16 +1048,27 @@ const CanvasMode = ({
           className="absolute inset-0 origin-top-left"
           style={{ transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`, transformOrigin: '0 0' }}
         >
-          {/* 无限网格背景 - 根据缩放比例动态调整网格大小 */}
-      <div
-            className="absolute inset-0"
+          {/* 无限网格背景 - 巨大背景区域，始终覆盖可视区域 */}
+          <div
+            className="absolute"
             style={{
-              backgroundImage: `linear-gradient(rgba(107,114,128,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(107,114,128,0.08) 1px, transparent 1px)`,
-              // 网格大小随缩放比例调整，保持视觉上20px的间距
-              backgroundSize: `${20 / scale}px ${20 / scale}px`,
-              // 网格位置根据平移偏移量调整，实现无限滚动效果
-              backgroundPosition: `${-translate.x / scale}px ${-translate.y / scale}px, ${-translate.x / scale}px ${-translate.y / scale}px`,
-        pointerEvents: 'none'
+              // 创建巨大无比的世界坐标网格区域
+              width: '1000000px',
+              height: '1000000px',
+              // 相对于变换容器居中（世界坐标原点）
+              left: '-500000px',
+              top: '-500000px',
+              // 确保在所有缩放级别下都有网格（网格线间距固定，不随缩放变化）
+              backgroundImage: [
+                // 主网格线 - 每100px一条（较粗）
+                `repeating-linear-gradient(to right, rgba(107,114,128,0.15) 0, rgba(107,114,128,0.15) 1px, transparent 1px, transparent 100px)`,
+                `repeating-linear-gradient(to bottom, rgba(107,114,128,0.15) 0, rgba(107,114,128,0.15) 1px, transparent 1px, transparent 100px)`,
+                // 次网格线 - 每20px一条（较细）
+                `repeating-linear-gradient(to right, rgba(107,114,128,0.06) 0, rgba(107,114,128,0.06) 1px, transparent 1px, transparent 20px)`,
+                `repeating-linear-gradient(to bottom, rgba(107,114,128,0.06) 0, rgba(107,114,128,0.06) 1px, transparent 1px, transparent 20px)`
+              ].join(', '),
+              // 让背景跟随变换（缩放和平移）
+              pointerEvents: 'none'
             }}
           />
 
@@ -1481,15 +1492,15 @@ const CanvasMode = ({
         {/* 右下角工具条（不缩放，固定屏幕 UI） */}
         <div className="absolute right-4 bottom-4 z-30 flex flex-col items-end gap-2">
           <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white/90 dark:bg-gray-800/90 shadow px-2 py-1 flex items-center gap-1">
-            <button className="px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onClick={() => setScale(s => clamp(s * 0.9, 0.4, 2.5))}>-</button>
-            <div 
+            <button className="px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onClick={() => setScale(s => clamp(s * 0.9, 0.5, 2.5))}>-</button>
+            <div
               className="px-2 text-sm tabular-nums text-gray-600 dark:text-gray-300 cursor-help relative"
               onMouseEnter={showTooltip}
               onMouseLeave={hideTooltip}
             >
               {Math.round(scale * 100)}%
             </div>
-            <button className="px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onClick={() => setScale(s => clamp(s * 1.1, 0.4, 2.5))}>+</button>
+            <button className="px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onClick={() => setScale(s => clamp(s * 1.1, 0.5, 2.5))}>+</button>
             <button className="ml-1 px-2 py-1 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 rounded" onClick={() => { setScale(1); setTranslate({ x: 0, y: 0 }); }}>重置</button>
           </div>
         </div>

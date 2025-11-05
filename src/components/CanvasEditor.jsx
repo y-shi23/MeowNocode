@@ -38,23 +38,32 @@ const CanvasEditor = ({ onAddMemo, canvasSize, scale = 1, translate = { x: 0, y:
 
   // 点击外部区域时取消输入框聚焦
   useEffect(() => {
-    const handleClickOutside = (event) => {
+    const handlePointerDown = (event) => {
       const container = containerRef.current;
       const textarea = textareaRef.current;
 
-      if (container && textarea &&
-          !container.contains(event.target) &&
-          document.activeElement === textarea) {
-        textarea.blur();
+      if (!container || !textarea) return;
+
+      // 检查点击是否在容器外部
+      const isClickOutside = !container.contains(event.target);
+
+      // 只有当文本框当前处于聚焦状态且点击外部时才取消聚焦
+      if (isClickOutside && document.activeElement === textarea) {
+        // 延迟到下一个事件循环，确保点击事件先完成
+        setTimeout(() => {
+          textarea.blur();
+        }, 0);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside, { passive: true });
+    // 使用 pointerdown 替代 mousedown，对触屏设备更友好
+    document.addEventListener('pointerdown', handlePointerDown, true); // 使用捕获阶段
+    // 保留 touchstart 以兼容旧设备
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener('pointerdown', handlePointerDown, true);
+      document.removeEventListener('touchstart', handlePointerDown);
     };
   }, []);
 
