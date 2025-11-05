@@ -1528,9 +1528,12 @@ import { toast } from 'sonner';
             danmakuText={musicModal.danmakuText}
             enableDanmaku={musicModal.enableDanmaku}
           />
-          <MiniMusicPlayer
-            onOpenFull={() => setMusicModal((m) => ({ ...m, isOpen: true }))}
-          />
+          {/* 在画布模式下禁用迷你音乐播放器，避免与右下角操作按钮重叠 */}
+          {!isCanvasMode && (
+            <MiniMusicPlayer
+              onOpenFull={() => setMusicModal((m) => ({ ...m, isOpen: true }))}
+            />
+          )}
           {/* 音乐搜索卡片 */}
           <MusicSearchCard
             open={musicSearchOpen}
