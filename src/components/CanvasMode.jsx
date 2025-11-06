@@ -5,6 +5,8 @@ import CanvasToolbar from './CanvasToolbar';
 import ToolOptionsPanel from './ToolOptionsPanel';
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const WORLD_SIZE = 1000000;
+const HALF_WORLD = WORLD_SIZE / 2;
 
 const CanvasMode = ({ 
   memos = [], 
@@ -1053,11 +1055,11 @@ const CanvasMode = ({
             className="absolute"
             style={{
               // 创建巨大无比的世界坐标网格区域
-              width: '1000000px',
-              height: '1000000px',
+              width: `${WORLD_SIZE}px`,
+              height: `${WORLD_SIZE}px`,
               // 相对于变换容器居中（世界坐标原点）
-              left: '-500000px',
-              top: '-500000px',
+              left: `-${HALF_WORLD}px`,
+              top: `-${HALF_WORLD}px`,
               // 确保在所有缩放级别下都有网格（网格线间距固定，不随缩放变化）
               backgroundImage: [
                 // 主网格线 - 每100px一条（较粗）
@@ -1075,7 +1077,13 @@ const CanvasMode = ({
           {/* 连接线（世界坐标） */}
           <svg 
             className="absolute inset-0"
-            style={{ zIndex: 1, width: '100%', height: '100%', pointerEvents: 'auto' }}
+            style={{
+              zIndex: 1,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'auto',
+              overflow: 'visible'
+            }}
           >
             {/* 定义：箭头标记与局部擦除段遮罩 */}
             <defs>
@@ -1448,7 +1456,16 @@ const CanvasMode = ({
 
           {/* 框选矩形（世界坐标） */}
           {isSelecting && selectionRect && (
-            <svg className="absolute inset-0" style={{ zIndex: 2, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            <svg
+              className="absolute inset-0"
+              style={{
+                zIndex: 2,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                overflow: 'visible'
+              }}
+            >
               <rect
                 x={selectionRect.x}
                 y={selectionRect.y}
