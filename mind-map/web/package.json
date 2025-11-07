@@ -1,0 +1,69 @@
+{
+  "name": "thoughts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build && node ../copy.js",
+    "lint": "vue-cli-service lint",
+    "buildLibrary": "node ./scripts/updateVersion.js && vue-cli-service build --mode library --target lib --name simpleMindMap ../simple-mind-map/full.js --dest ../simple-mind-map/dist && esbuild ../simple-mind-map/full.js --bundle --external:buffer --format=esm --outfile=../simple-mind-map/dist/simpleMindMap.esm.js && esbuild ../simple-mind-map/full.js --bundle --minify --external:buffer --format=esm --outfile=../simple-mind-map/dist/simpleMindMap.esm.min.js",
+    "format": "prettier --write src/* src/*/* src/*/*/* src/*/*/*/*",
+    "createNodeImageList": "node ./scripts/createNodeImageList.js",
+    "ai:serve": "node ./scripts/ai.js"
+  },
+  "dependencies": {
+    "@toast-ui/editor": "^3.1.5",
+    "axios": "^1.7.9",
+    "codemirror": "^5.65.16",
+    "core-js": "^3.6.5",
+    "element-ui": "^2.15.1",
+    "highlight.js": "^10.7.3",
+    "katex": "^0.16.9",
+    "simple-mind-map-plugin-themes": "^1.0.0",
+    "v-viewer": "^1.6.4",
+    "vue": "^2.6.11",
+    "vue-i18n": "^8.27.2",
+    "vue-router": "^3.5.1",
+    "vuex": "^3.6.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^4.5.0",
+    "@vue/cli-plugin-eslint": "^4.5.0",
+    "@vue/cli-service": "^4.5.0",
+    "babel-eslint": "^10.1.0",
+    "chokidar": "^3.5.3",
+    "esbuild": "^0.17.15",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "express": "^4.21.2",
+    "less": "^3.12.2",
+    "less-loader": "^7.1.0",
+    "markdown-it": "^13.0.1",
+    "markdown-it-checkbox": "^1.1.0",
+    "prettier": "^1.19.1",
+    "vconsole": "^3.15.1",
+    "vue-template-compiler": "^2.6.11",
+    "webpack": "^4.44.2",
+    "webpack-dynamic-public-path": "^1.0.8"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
