@@ -10,6 +10,8 @@ import { MusicProvider } from "@/context/MusicContext";
 import { PasswordAuthProvider, usePasswordAuth } from "@/context/PasswordAuthContext";
 import Login from "@/pages/Login";
 import LoginDialog from "@/components/LoginDialog";
+import DesktopTitleBar from "@/components/DesktopTitleBar";
+import DesktopConfigCheck from "@/components/DesktopConfigCheck";
 
 // S3代理功能已移除，现在直接使用AWS SDK
 
@@ -34,16 +36,22 @@ const AppContent = () => {
   // 🔧 修改逻辑：不管是否需要认证，都显示主应用
   // 未认证时显示公开博客模式，已认证时显示完整功能
   return (
-    <>
-      <HashRouter>
-        <Routes>
-          {navItems.map(({ to, page }) => (
-            <Route key={to} path={to} element={page} />
-          ))}
-        </Routes>
-      </HashRouter>
-      <LoginDialog />
-    </>
+    <div className="h-screen flex flex-col">
+      {/* 桌面端标题栏 */}
+      <DesktopTitleBar />
+
+      {/* 主应用内容 */}
+      <div className="flex-1 overflow-hidden">
+        <HashRouter>
+          <Routes>
+            {navItems.map(({ to, page }) => (
+              <Route key={to} path={to} element={page} />
+            ))}
+          </Routes>
+        </HashRouter>
+        <LoginDialog />
+      </div>
+    </div>
   );
 };
 
@@ -55,6 +63,7 @@ const App = () => (
           <MusicProvider>
             <TooltipProvider>
               <Toaster />
+              <DesktopConfigCheck />
               <AppContent />
             </TooltipProvider>
           </MusicProvider>

@@ -1,17 +1,27 @@
 // D1数据库服务类
 export class D1DatabaseService {
+  // 检查是否为桌面端环境
+  static isDesktop() {
+    return window.electronConfig?.isDesktop || false;
+  }
+
   // 初始化D1数据库连接
   static async getDB() {
+    // 桌面端禁用D1连接
+    if (this.isDesktop()) {
+      throw new Error('桌面端版本已禁用云端数据库功能，请使用本地存储');
+    }
+
     // 在Cloudflare Workers环境中，DB会自动绑定到全局变量
     if (typeof DB !== 'undefined') {
       return DB;
     }
-    
+
   // 在本地开发环境中，如需显式启用模拟DB，请设置 VITE_ALLOW_D1_MOCK=true
   if (import.meta.env.DEV && import.meta.env.VITE_ALLOW_D1_MOCK === 'true') {
       return this.getMockDB();
     }
-    
+
     throw new Error('D1数据库未正确绑定');
   }
 
@@ -44,6 +54,11 @@ export class D1DatabaseService {
   // 同步用户数据到D1
   static async syncUserData() {
     try {
+      // 桌面端直接返回成功，不执行云端同步
+      if (this.isDesktop()) {
+        return { success: true, message: '桌面端版本使用本地存储，无需云端同步' };
+      }
+
       const db = await this.getDB();
       
       // 获取本地数据
@@ -90,6 +105,11 @@ export class D1DatabaseService {
   // 从D1恢复用户数据
   static async restoreUserData() {
     try {
+      // 桌面端直接返回成功，不执行云端恢复
+      if (this.isDesktop()) {
+        return { success: true, message: '桌面端版本使用本地存储，无需云端恢复' };
+      }
+
       const db = await this.getDB();
 
       // 获取所有memos
