@@ -42,6 +42,7 @@ const MemoEditor = ({
   // local states / refs
   const textareaRef = useRef(null);
   const rootRef = useRef(null);
+  const collapsedHeightRef = useRef(0);
   const [isFocused, setIsFocused] = useState(false);
   const [isComposing, setIsComposing] = useState(false);
   const [compositionValue, setCompositionValue] = useState('');
@@ -128,22 +129,60 @@ const MemoEditor = ({
     }
   };
 
-  // 自动调整高度
-  const adjustHeight = () => {
-    if (textareaRef.current) {
-      const textarea = textareaRef.current;
-      textarea.style.height = 'auto';
-      const newHeight = Math.max(120, Math.min(400, textarea.scrollHeight));
-      textarea.style.height = newHeight + 'px';
+  const measureCollapsedHeight = useCallback(() => {
+    if (typeof window === 'undefined' || !textareaRef.current) {
+      return collapsedHeightRef.current || 72;
     }
-  };
+    const textarea = textareaRef.current;
+    const styles = window.getComputedStyle(textarea);
+    const lineHeight = parseFloat(styles.lineHeight || '24') || 24;
+    const paddingTop = parseFloat(styles.paddingTop || '12') || 12;
+    const paddingBottom = parseFloat(styles.paddingBottom || '12') || 12;
+    const borderTop = parseFloat(styles.borderTopWidth || '0') || 0;
+    const borderBottom = parseFloat(styles.borderBottomWidth || '0') || 0;
+    const collapsed = lineHeight * 2 + paddingTop + paddingBottom + borderTop + borderBottom;
+    collapsedHeightRef.current = collapsed;
+    return collapsed;
+  }, [fontConfig?.fontSize, currentFont]);
+
+  // 自动调整高度
+  const adjustHeight = useCallback((forceFocusState) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (fn) => setTimeout(fn, 0);
+
+    const applyHeight = (target) => {
+      schedule(() => {
+        if (textareaRef.current) {
+          textareaRef.current.style.height = `${target}px`;
+        }
+      });
+    };
+
+    const shouldExpand = typeof forceFocusState === 'boolean' ? forceFocusState : isFocused;
+    if (!shouldExpand) {
+      const collapsed = measureCollapsedHeight();
+      applyHeight(collapsed);
+      return;
+    }
+
+    const previousHeight = textarea.style.height;
+    textarea.style.height = 'auto';
+    const newHeight = Math.max(120, Math.min(400, textarea.scrollHeight));
+    textarea.style.height = previousHeight;
+    applyHeight(newHeight);
+  }, [isFocused, measureCollapsedHeight]);
 
   // 处理输入变化
   const handleChange = (e) => {
     const newValue = e.target.value;
     onChange?.(newValue);
-    // 延迟调整高度
-    setTimeout(adjustHeight, 0);
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (fn) => setTimeout(fn, 0);
+    schedule(() => adjustHeight(true));
   };
 
   // 处理输入法合成开关
@@ -556,6 +595,7 @@ const MemoEditor = ({
   // 焦点事件
   const handleFocus = () => {
     setIsFocused(true);
+    adjustHeight(true);
     onFocus?.();
   };
 
@@ -564,6 +604,7 @@ const MemoEditor = ({
     // 失去焦点时关闭选择器
     setShowBacklinkPicker(false);
     setShowEmojiPicker(false);
+    adjustHeight(false);
     onBlur?.();
   };
 
@@ -577,10 +618,10 @@ const MemoEditor = ({
     }
   };
 
-  // 当value变化时调整高度
+  // 当value或状态变化时调整高度
   useEffect(() => {
     adjustHeight();
-  }, [value]);
+  }, [value, adjustHeight]);
 
   // 自动聚焦
   useEffect(() => {
@@ -622,7 +663,7 @@ const MemoEditor = ({
     <div
       ref={rootRef}
       className={cn(
-        "relative border rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition-all duration-200",
+        "relative border rounded-lg overflow-hidden bg-white dark:bg-gray-800 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
         isFocused
           ? "ring-2 shadow-sm"
           : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600",
@@ -654,15 +695,16 @@ const MemoEditor = ({
           disabled && "cursor-not-allowed"
         )}
         style={{
-          minHeight: '120px',
           maxHeight: '400px',
           lineHeight: '1.5rem',
           fontSize: (fontConfig?.fontSize ? `${fontConfig.fontSize}px` : undefined),
+          transition: 'height 280ms cubic-bezier(0.22, 1, 0.36, 1)',
+          overflow: isFocused ? 'auto' : 'hidden',
           ...(currentFont === 'default' && {
             fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif'
           })
         }}
-        rows={5}
+        rows={isFocused ? 5 : 2}
       />
 
       {/* 反链 Chips（编辑时显示） */}
