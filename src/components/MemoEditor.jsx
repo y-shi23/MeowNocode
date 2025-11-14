@@ -691,7 +691,7 @@ const MemoEditor = ({
         className={cn(
           "w-full p-3 bg-transparent resize-none outline-none border-none theme-selection",
           "text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500",
-          "custom-font-content",
+          "custom-font-content scrollbar-theme scrollbar-track-transparent",
           disabled && "cursor-not-allowed"
         )}
         style={{

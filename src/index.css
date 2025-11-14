@@ -384,6 +384,19 @@
     background-color: #64748b; /* slate-500 */
   }
 
+  .scrollbar-theme.scrollbar-track-transparent {
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .dark .scrollbar-theme.scrollbar-track-transparent {
+    scrollbar-color: #475569 transparent;
+  }
+
+  .scrollbar-theme.scrollbar-track-transparent::-webkit-scrollbar-track,
+  .dark .scrollbar-theme.scrollbar-track-transparent::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
     /* 移动端侧栏动画 */
     .mobile-sidebar-enter {
       transform: translateX(-100%);
